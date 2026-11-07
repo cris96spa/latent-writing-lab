@@ -10,7 +10,9 @@ permissions:
 
 concurrency:
   group: validation-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # A newer run supersedes an older one, except on the default branch, where the older run may
+  # be deploying the guide and must finish.
+  cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
 
 defaults:
   run:
@@ -39,7 +41,82 @@ jobs:
           name: article-and-browser-checks-node-${{ matrix.node-version }}
           path: |
             app/dist/
+            docs-dist/
             playwright-report/
             test-results/
           if-no-files-found: ignore
           retention-days: 14
+
+  guide-pages-build:
+    name: Build the guide for GitHub Pages
+    needs: check
+    # Only a validated push or manual run on the default branch publishes the guide.
+    if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pages: read
+    outputs:
+      enabled: ${{ steps.source.outputs.enabled }}
+    steps:
+      # Publishing is opt-in: it runs once the repository's Pages source is GitHub Actions, so
+      # article projects created from this starter skip it until their owner enables it.
+      - name: Check the Pages source
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          source=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq .build_type 2>/dev/null || true)
+          if [ "$source" = "workflow" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::GitHub Pages does not deploy from GitHub Actions in this repository; the guide is not published."
+          fi
+      - name: Check out repository
+        if: steps.source.outputs.enabled == 'true'
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Set up Node.js
+        if: steps.source.outputs.enabled == 'true'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install dependencies
+        if: steps.source.outputs.enabled == 'true'
+        run: npm ci
+      - name: Read the Pages address
+        if: steps.source.outputs.enabled == 'true'
+        id: pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
+      # A project site is served under /<repository>/, so the guide is built for that base path.
+      - name: Build the guide
+        if: steps.source.outputs.enabled == 'true'
+        run: npm run docs:build -- --base "${{ steps.pages.outputs.base_path }}/"
+      - name: Upload the guide
+        if: steps.source.outputs.enabled == 'true'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: docs-dist/
+
+  guide-pages-deploy:
+    name: Publish the guide on GitHub Pages
+    needs: guide-pages-build
+    if: needs.guide-pages-build.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: guide-pages
+      cancel-in-progress: false
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5

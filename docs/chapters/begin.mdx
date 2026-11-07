@@ -1,0 +1,71 @@
+import HtmlEmbed from "../../components/HtmlEmbed.astro";
+import Sidenote from "../../components/Sidenote.astro";
+
+## An article readers can test
+
+Here is a claim from mixture-of-experts research: raising a router's temperature spreads a token
+more evenly across the experts it picks, but never changes which experts those are. A paper
+would state it and ask you to believe it. Here you can check it yourself. The figure opens with
+two active experts at temperature one, where Expert 1 receives 59.9% of the token and Expert 4
+receives 40.1%. Drag **Temperature** to 2: the split moves to 55.0% and 45.0%, closer together,
+and the order holds. Set **Active experts** to 1, and the top expert takes the whole token.
+
+<HtmlEmbed
+  id="guide-routing"
+  src="d3-routing.html"
+  title="How a router splits a token"
+  desc="Illustrative scores [2.2, 1.3, 0.6, 1.8], not measurements from a trained model."
+/>
+
+This guide shows you how to publish an explanation like that one. By the end, you will have
+your own article built around this figure. It will have an equation, a cited source, a test
+that operates the figure the way a reader would, and a PDF. You will also know how to start
+from this figure and build your own, and how to show it on another website.
+
+<Sidenote>
+  This guide is itself an article built by the engine it describes.
+  The figure above is the file{" "}
+  <code>app/src/content/embeds/d3-routing.html</code>.
+</Sidenote>
+
+The articles are built by Thibaud Frere's research article template, the engine behind Hugging
+Face's Smol Training Playbook, LLM Evaluation Guidebook and MoE Training Handbook. You write
+prose in Markdown, math in LaTeX and sources in BibTeX, and each figure is one HTML file. The
+engine turns them into a website with a theme, numbered figures, a table of contents and
+references, and from that website into a PDF.
+
+You need to be comfortable with Markdown and a terminal; JavaScript can wait until you build a
+figure of your own. Read the chapters in order the first time, because each one extends the
+article from the chapter before. Closed panels hold optional detail, such as first-time setup or
+a complete list of options, so you can skip them and come back when you need them. If you only
+want to show a figure on another website, go to
+[Show the figure on another site](#show-the-figure-on-another-site). If you want to know how the
+pieces fit together, read
+[How it works](https://github.com/cris96spa/latent-writing-lab/blob/HEAD/docs/how-it-works.md)
+in the repository.
+
+Three rules explain almost everything the engine does, and each returns in the chapter where you
+first rely on it:
+
+1. **What you import is what you publish.** One entry file, `article.mdx`, lists the chapters
+   of the article. A chapter it imports is published, and a chapter it does not import is not.
+2. **Each figure has one source.** A figure is one HTML file. Every page that shows it renders
+   that same file, so a fix reaches every reader at once.
+3. **Readers get the build, not your preview.** Readers receive the static site the build
+   writes, or a PDF in which each figure is a still image of the state it opens in. So you
+   check the build, not the preview.
+
+The figure below marks where each rule applies in a small project with two chapters and one
+figure. Select **What you import is what you publish**, and the unimported draft chapter stands
+apart from everything the build produces; select **Readers get the build**, and your preview
+drops out of what readers receive.
+
+<HtmlEmbed
+  id="guide-rules"
+  src="guide-three-rules.html"
+  title="Where the three rules apply"
+  desc="An example project: two chapters, one figure, and what the build makes of them."
+/>
+
+The routing figure already runs in this guide. Getting it to run in an article of your own takes
+one repository and two files.

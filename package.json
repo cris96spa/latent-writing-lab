@@ -19,13 +19,16 @@
     "latex:convert": "npm run latex:convert --workspace research-article-template --",
     "notion:import": "npm run notion:import --workspace research-article-template --",
     "sync:template:dry": "npm run sync:template:dry --workspace research-article-template",
-    "check": "npm run content:check && npm run format:check && npm run test:models && npm run build",
+    "check": "npm run content:check && npm run format:check && npm run build",
     "content:check": "node tools/check-content.mjs",
-    "format": "prettier --write README.md AGENTS.md .github docs tools e2e package.json playwright.config.ts app/src/content/article.mdx app/src/content/chapters app/src/content/figures.json app/src/content/embeds/d3-routing.html app/src/content/embeds/d3-forward-pass.html app/src/pages/figures",
-    "format:check": "prettier --check README.md AGENTS.md .github docs tools e2e package.json playwright.config.ts app/src/content/article.mdx app/src/content/chapters app/src/content/figures.json app/src/content/embeds/d3-routing.html app/src/content/embeds/d3-forward-pass.html app/src/pages/figures",
+    "format": "prettier --write README.md AGENTS.md .ai/skills/write-documentation .github docs tools e2e package.json playwright.config.ts app/src/content/article.mdx app/src/content/chapters app/src/content/figures.json app/src/content/embeds/d3-routing.html app/src/pages/figures",
+    "format:check": "prettier --check README.md AGENTS.md .ai/skills/write-documentation .github docs tools e2e package.json playwright.config.ts app/src/content/article.mdx app/src/content/chapters app/src/content/figures.json app/src/content/embeds/d3-routing.html app/src/pages/figures",
     "test:e2e": "playwright test",
     "docs:check": "node tools/check-docs.mjs",
-    "test:models": "node --test tools/tests/*.test.mjs"
+    "docs:dev": "node tools/docs.mjs dev",
+    "docs:build": "node tools/docs.mjs build",
+    "docs:preview": "node tools/docs.mjs preview",
+    "readme:media": "node tools/readme-media.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

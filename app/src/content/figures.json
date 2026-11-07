@@ -16,12 +16,5 @@
     "title": "Explore a mathematical function",
     "description": "Interactive function plotter by Thibaud Frere, research-article-template (CC BY 4.0).",
     "lang": "en"
-  },
-  "forward-pass": {
-    "src": "d3-forward-pass.html",
-    "title": "Who is Cristian? \u2014 Latent Space forward pass",
-    "description": "The Latent Space homepage hero: captured GPT-2 tokens and an interactive, scripted forward pass.",
-    "lang": "en",
-    "frameless": true
   }
 }

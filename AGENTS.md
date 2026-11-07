@@ -2,7 +2,8 @@
 
 This is an Astro + MDX writing workspace based on
 [research-article-template](https://github.com/tfrere/research-article-template).
-Read `docs/authoring.md` before editing content or figures.
+Read `docs/how-it-works.md` before changing the workspace, and the guide's chapters in
+`docs/chapters/` before editing content or figures.
 
 ## Working agreement
 
@@ -30,6 +31,8 @@ Use the upstream skills and read their referenced guidance:
 - `.ai/skills/create-html-embed/SKILL.md` for interactive figures.
 - `.ai/skills/article-frontmatter/SKILL.md` for article metadata.
 - `.ai/skills/deploy-to-hf-spaces/SKILL.md` for explicitly requested deployment.
+- `.ai/skills/write-documentation/SKILL.md` for any prose meant for other readers: the
+  README, `docs/`, guide chapters, figure captions, pull requests and commit messages.
 
 ## Figures and content
 
@@ -50,6 +53,14 @@ in `app/src/content/figures.json`.
 
 Run `npm run check`, `npm run docs:check`, and `npm run test:e2e` for implementation
 changes. Exercise PDF export for publication changes. Report only checks actually run.
-Do not publish a site, package or container unless requested. CI builds artifacts only.
+Build the native documentation with `make doc-check` before browser tests. `make doc`
+serves `docs/article.mdx` with the same engine and shared figures in an ignored working
+copy. Edit documentation in `docs/`, never generated `.cache/` or `docs-dist/` files.
+Write documentation by the writing skill: lead with the reader's problem, give each
+fact one home, and run every command you document. Use live examples and expandable
+details in the guide where they help the reader act.
+Do not publish a site, package or container unless requested. CI never deploys the article;
+on the default branch it publishes only the guide, to GitHub Pages, once the repository's
+Pages source is GitHub Actions.
 Documentation describes present behavior, with no migration narrative. Use Conventional
 Commits if asked to commit. Keep project rules consistent with the native template.

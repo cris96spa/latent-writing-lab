@@ -1,1 +1,10 @@
-{"printWidth": 100, "plugins": ["prettier-plugin-astro"]}
+{
+  "printWidth": 100,
+  "plugins": ["prettier-plugin-astro"],
+  "overrides": [
+    {
+      "files": "docs/chapters/*.mdx",
+      "options": { "printWidth": 68 }
+    }
+  ]
+}

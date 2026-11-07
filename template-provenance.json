@@ -102,5 +102,41 @@
     "app/public/scripts/color-palettes.js": "d543a1cfd64a003f33b77f96929afdd4d29a6047bddcbb2ed31b54ea41bd940a",
     "app/src/pages/dataviz.astro": "691722f0657527a1456efa115226a02f84b95c36b2b30e562f2793531daad38b",
     "app/src/utils/extract-embeds.mjs": "b440997d680738f1551572642bc6c10bc8efac7350714326f47fbb1998149972"
+  },
+  "demoContent": {
+    "repository": "https://huggingface.co/spaces/tfrere/research-article-template",
+    "commit": "c75fc29c361755f66c46ae6e83d958b10c4d5feb",
+    "description": "Complete upstream content snapshot with materialized Git LFS assets. Local entry metadata disables PDF until an export is provided; local reference entries and optional examples coexist.",
+    "knownMissingEmbeds": [
+      "d3-hf-citations.html"
+    ],
+    "assetSha256": {
+      "app/src/content/assets/audio/audio-example.mp3": "25334bdbaf5980acb854078acdbeb9f413f2ff71be3874e77fb5cd175403d2c9",
+      "app/src/content/assets/data/admin_seq_write.json": "8933d6923884634cc5fcf2d0000de55c43badc3e80de776bff230f5c01af439f",
+      "app/src/content/assets/data/attention_evals.csv": "26c1151c2f83c4894dfc2e896a6da6539797e9e6bf40939a2bc49ed773f8e723",
+      "app/src/content/assets/data/attention_loss.csv": "46dafcb1fb0e9c45fe0ec48a7d4283c3f925a922ddf560fe32969abfa02b95c9",
+      "app/src/content/assets/data/banner_visualisation_data.csv": "b155d8c319b1788befe716017fecca580768157feee6221f3af44b7bb9f9c7e5",
+      "app/src/content/assets/data/continuous-glider.png": "22823db2884be7cd1aaae9e14445f4802d73ff1562fa885d0d377b73fc13d59c",
+      "app/src/content/assets/data/data.json": "6bbaf02f1b470da41754e3828e81e76ef386d9b3cfb8b57dcc7cbfd4225956cc",
+      "app/src/content/assets/data/font-sprite-mapping.json": "ea1b487ebafe8d495737674a7eb6492b06551aeb97de79728afeb4aba7c39f29",
+      "app/src/content/assets/data/font-sprite.svg": "119939061daa2ffcf44e5a2d562e75d41858148e801d5ad9f51e86183978cd65",
+      "app/src/content/assets/data/formatting_filters.csv": "e5218781e5f018891311410d684785a3c661ca3cd25d2ac62bf45e6bb7d69e78",
+      "app/src/content/assets/data/fsx_seq_write.json": "28480185dfefcea4453e8cb9d6a889b60130e99d4e59c9dba926162d3dcb62d6",
+      "app/src/content/assets/data/mnist-variant-model.json": "7dca86e85be46c1fca6a4e2503786e88e3f8d4609fb7284c8a1479620a5827da",
+      "app/src/content/assets/data/relevance_filters.csv": "69acb8bc0b80b2c664d821b1c06d67af315e67d8a706cf9e5d351e4468392cc6",
+      "app/src/content/assets/data/root_seq_write.json": "5cd3c3121decb1450e43d83a6d4b93145dbb269de1546d2678e3d01710b82ec1",
+      "app/src/content/assets/data/scratch_seq_write.json": "71a79f782fb57c9d1c2dd19aa8ace5a40c6be7088edfb6afac4c151987fe33e9",
+      "app/src/content/assets/data/typography_data.json": "403e0095f2bcaa963cdfbb8d00a3695565623764d6f87b890bf58d7a2304acfc",
+      "app/src/content/assets/data/vision.csv": "d28bd13dc3a9ff100c82e8c9dc59270563b865383d09cf28c5aba5812bfa75ee",
+      "app/src/content/assets/image/article-template.png": "e73d31be6644badec309e4a614e1914c4a9516c80d81d167794b24a92b837a87",
+      "app/src/content/assets/image/finevision.png": "e6c02ff75943442df6667b162c406c11acb5cacf219c09ab6e60774125e5fb8b",
+      "app/src/content/assets/image/maintain-the-unmaintainable.png": "6b265d8ee4ca1413cd3af59cbf307531e0d11af8402070d54757f15ea2032cdf",
+      "app/src/content/assets/image/paper-template.png": "aeb4ac01d2f6494d9fab79ee302a1e9aedd3094f9ffe8bfb6e99c0ac4c3ae0c1",
+      "app/src/content/assets/image/placeholder-wide.png": "200daf8ade0c7f035d883fefa9a12d6ba7cca504b1d5571774748c3c90639103",
+      "app/src/content/assets/image/placeholder.png": "af82403ec775e8ed0139a70d034e000cb567b6766a3187d246800f0384d57ea9",
+      "app/src/content/assets/image/smoll-training-guide.png": "8a41f479bd3b922ddd723ccf80b7bebf3e8f875ee1049794d472c67e23f0cc12",
+      "app/src/content/assets/image/visual-vocabulary-poster.png": "62f72a7eeabc611d4b312c882589bae9369d49e39dd40e2d17e68c77399efc11",
+      "app/src/content/assets/sprites/font-sprite.svg": "119939061daa2ffcf44e5a2d562e75d41858148e801d5ad9f51e86183978cd65"
+    }
   }
 }

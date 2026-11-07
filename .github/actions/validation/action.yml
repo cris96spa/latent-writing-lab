@@ -1,5 +1,5 @@
 name: Validate article workspace
-description: Check content, formatting, scientific models, documentation, build and browser interactions.
+description: Check content, formatting, documentation, build and browser interactions.
 inputs:
   node-version:
     description: Node.js version to validate
@@ -16,11 +16,14 @@ runs:
     - name: Install dependencies
       run: npm ci
       shell: bash
-    - name: Verify content, formatting, models and build
+    - name: Verify content, formatting and build
       run: npm run check
       shell: bash
     - name: Check documentation links
       run: npm run docs:check
+      shell: bash
+    - name: Build the interactive guide
+      run: npm run docs:build
       shell: bash
     - name: Install Chromium
       run: npx playwright install --with-deps chromium

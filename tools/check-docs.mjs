@@ -1,13 +1,27 @@
 import { access, readFile, readdir } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 
+async function markdownFiles(directory) {
+  const files = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const path = `${directory}/${entry.name}`;
+    if (entry.isDirectory()) files.push(...(await markdownFiles(path)));
+    else if (/\.mdx?$/.test(entry.name)) files.push(path);
+  }
+  return files;
+}
+
 const files = [
   "README.md",
   "AGENTS.md",
-  ...(await readdir("docs")).filter((file) => file.endsWith(".md")).map((file) => `docs/${file}`),
+  ".ai/skills/write-documentation/SKILL.md",
+  ...(await markdownFiles("docs")),
 ];
 for (const file of files) {
-  const source = await readFile(file, "utf8");
+  // Code blocks and spans can contain example links; check the prose around them.
+  const source = (await readFile(file, "utf8"))
+    .replace(/^(`{3,}|~{3,}).*\n[\s\S]*?^\1\s*$/gm, "")
+    .replace(/`[^`\n]+`/g, "");
   for (const match of source.matchAll(/\]\(([^\s)]+)\)/g)) {
     const href = match[1].split("#")[0];
     if (!href || /^(?:https?:|mailto:|\/)/.test(href)) continue;

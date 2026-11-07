@@ -3,6 +3,7 @@ node_modules
 **/node_modules
 app/.astro
 app/dist
+docs-dist
 app/screenshots
 app/public/*.pdf
 app/public/thumb.auto.*
