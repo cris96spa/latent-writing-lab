@@ -1,0 +1,37 @@
+# Dependencies and build caches
+node_modules/
+.cache/
+app/.astro/
+app/dist/
+*.tsbuildinfo
+
+# Generated publication and importer output
+app/public/*.pdf
+app/public/thumb.auto.*
+app/screenshots/
+app/scripts/latex-importer/output/
+app/scripts/notion-importer/output/
+.temp-template-sync/
+*.backup-*
+
+# Test reports and local logs
+playwright-report/
+test-results/
+coverage/
+*.log
+
+# Local environment files; keep sanitized examples versioned
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Editor and operating-system files
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
