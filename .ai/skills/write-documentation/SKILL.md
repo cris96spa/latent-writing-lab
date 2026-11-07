@@ -1,6 +1,6 @@
 ---
 name: write-documentation
-description: Write or revise natural-language text in this repository, including README.md, the documentation pages in docs/pages/, figure titles and captions, AGENTS.md, pull request descriptions, commit messages and review reports. Use when asked to write, rewrite, review or restructure documentation or any prose meant for other readers.
+description: Write or revise natural-language text in this repository, including README.md, the documentation pages in docs/pages/ and their figure captions, AGENTS.md, pull request descriptions, commit messages and review reports. Use when asked to write, rewrite, review or restructure documentation or any prose meant for other readers.
 ---
 
 # Write documentation
@@ -13,8 +13,9 @@ describes how to write for that reader: decide what kind of text you are produci
 where that reader looks, lead with the big picture, say only what the reader needs, and test
 everything you tell them to do.
 
-It applies to every text written in natural language here: `README.md`, the documentation
-pages in `docs/pages/`, figure titles and captions, `AGENTS.md` and the skills, pull request descriptions, commit message bodies and
+It applies to every text written in natural language here except the article itself, which
+follows [write-article](../write-article/SKILL.md): `README.md`, the documentation pages in
+`docs/pages/` and their figure titles and captions, `AGENTS.md` and the skills, pull request descriptions, commit message bodies and
 review reports. Code comments follow the same prose rules and explain why the code is the way
 it is, not what it does.
 

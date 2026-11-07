@@ -70,6 +70,11 @@ never run. Footnotes are collected at the end of the article, with the reference
 | Table    | Pipes and a header separator   |
 | Code     | Three backticks and a language |
 
+Two characters behave differently in MDX than in plain Markdown. A `<` followed by a letter
+starts a component, and any `{` starts a JavaScript expression, so prose such as `weights <w>`
+or `the set {a, b}` stops the build. Write `{'<'}`, `{'>'}`, `{'{'}` and `{'}'}` for the symbols,
+or rephrase with words or parentheses. Code spans and code blocks are safe as they are.
+
 ## Math
 
 Write inline math between single dollar signs and display math between double ones. KaTeX
@@ -204,3 +209,7 @@ Readers rely on what an article states, so every author, affiliation, source and
 must be real and checked. When a value is invented to illustrate a mechanism, the caption says
 so. Write prose and figure labels in the article's language; the template's own interface, such
 as its buttons and table of contents, stays in English unless you change the engine.
+
+The house style for the article itself, from voice and punctuation to when each source gets
+cited, lives in `.ai/skills/write-article/SKILL.md`. Coding agents follow it through
+`AGENTS.md`, and it reads as a checklist for human authors too.

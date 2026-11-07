@@ -15,6 +15,7 @@ const files = [
   "README.md",
   "AGENTS.md",
   ".ai/skills/write-documentation/SKILL.md",
+  ".ai/skills/write-article/SKILL.md",
   ...(await markdownFiles("docs")),
 ];
 for (const file of files) {
