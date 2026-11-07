@@ -1,0 +1,303 @@
+<div class="d3-routing">
+  <p class="routing-fallback">
+    Two active experts at temperature one: Expert 1 receives 59.9% and Expert 4 receives 40.1% of
+    the mixture. All other weights are zero.
+  </p>
+</div>
+<style>
+  .d3-routing {
+    color: var(--text-color);
+  }
+  .d3-routing svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .d3-routing .routing-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .d3-routing label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1 1 160px;
+  }
+  .d3-routing input {
+    width: 100%;
+    accent-color: var(--primary-color);
+  }
+  .d3-routing .routing-steps {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .d3-routing button {
+    font: inherit;
+    color: var(--text-color);
+    background: var(--surface-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--button-radius);
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+  }
+  .d3-routing button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .d3-routing :focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 3px;
+  }
+  .d3-routing .routing-summary {
+    font-variant-numeric: tabular-nums;
+  }
+  .d3-routing .routing-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+  }
+  .d3-routing .routing-swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    vertical-align: middle;
+  }
+  @media print {
+    .d3-routing .routing-controls,
+    .d3-routing .routing-steps {
+      display: none;
+    }
+  }
+</style>
+<script>
+  (() => {
+    // The scientific model is independent of the DOM and rendering functions.
+    function route(logits, k, temperature) {
+      if (
+        !logits.length ||
+        !logits.every(Number.isFinite) ||
+        !Number.isInteger(k) ||
+        k < 1 ||
+        k > logits.length ||
+        !Number.isFinite(temperature) ||
+        temperature <= 0
+      ) {
+        throw new Error(
+          "Routing requires finite scores, positive temperature, and a valid expert count.",
+        );
+      }
+      const maximum = Math.max(...logits);
+      const scores = logits.map((value) => Math.exp((value - maximum) / temperature));
+      const total = scores.reduce((a, b) => a + b, 0);
+      const probabilities = scores.map((value) => value / total);
+      const selected = logits
+        .map((_, i) => i)
+        .sort((a, b) => logits[b] - logits[a] || a - b)
+        .slice(0, k);
+      const selectedTotal = selected.reduce((sum, i) => sum + probabilities[i], 0);
+      return {
+        probabilities,
+        selected,
+        weights: probabilities.map((p, i) => (selected.includes(i) ? p / selectedTotal : 0)),
+      };
+    }
+
+    function mount(container) {
+      if (container.dataset.mounted === "true") return;
+      container.dataset.mounted = "true";
+      const d3 = window.d3;
+      const logits = [2.2, 1.3, 0.6, 1.8];
+      const state = { k: 2, temperature: 1, step: 2 };
+      const stages = ["Score every expert", "Keep the top-k", "Renormalize selected weights"];
+      container.replaceChildren();
+      const root = d3.select(container);
+      const steps = root.append("div").attr("class", "routing-steps");
+      const previous = steps
+        .append("button")
+        .attr("type", "button")
+        .text("Previous")
+        .on("click", () => {
+          state.step--;
+          render();
+        });
+      const stage = steps.append("span").attr("aria-live", "polite");
+      const next = steps
+        .append("button")
+        .attr("type", "button")
+        .text("Next")
+        .on("click", () => {
+          state.step++;
+          render();
+        });
+      steps
+        .append("button")
+        .attr("type", "button")
+        .text("Reset figure")
+        .on("click", () => {
+          Object.assign(state, { k: 2, temperature: 1, step: 2 });
+          kInput.property("value", 2);
+          tInput.property("value", 1);
+          render();
+        });
+      steps.selectAll("button").attr("class", "button button--ghost");
+      const svg = root.append("svg").attr("role", "img");
+      const controls = root.append("div").attr("class", "routing-controls");
+      const kLabel = controls.append("label").text("Active experts (k)");
+      const kInput = kLabel
+        .append("input")
+        .attr("type", "range")
+        .attr("min", 1)
+        .attr("max", 4)
+        .attr("step", 1)
+        .attr("aria-label", "Active experts (k)")
+        .property("value", 2)
+        .on("input", function () {
+          state.k = Number(this.value);
+          render();
+        });
+      const kOutput = kLabel.append("output");
+      const tLabel = controls.append("label").text("Temperature");
+      const tInput = tLabel
+        .append("input")
+        .attr("type", "range")
+        .attr("min", 0.2)
+        .attr("max", 2)
+        .attr("step", 0.1)
+        .attr("aria-label", "Temperature")
+        .property("value", 1)
+        .on("input", function () {
+          state.temperature = Number(this.value);
+          render();
+        });
+      const tOutput = tLabel.append("output");
+      const legend = root.append("div").attr("class", "routing-legend");
+      legend.append("strong").text("Legend");
+      const selectedLegend = legend.append("span");
+      const swatch = selectedLegend.append("i").attr("class", "routing-swatch");
+      selectedLegend.append("span").text(" ✓ Selected expert");
+      legend.append("span").text("Unmarked: inactive expert");
+      const summary = root.append("p").attr("class", "routing-summary").attr("aria-live", "polite");
+      root
+        .append("p")
+        .text("Temperature changes weights; it preserves the top-k ranking for fixed logits.");
+
+      function render() {
+        const result = route(logits, state.k, state.temperature);
+        const width = Math.max(280, container.clientWidth);
+        const values = state.step === 2 ? result.weights : result.probabilities;
+        const color =
+          window.ColorPalettes?.getColors("categorical", 1)?.[0] || "var(--primary-color)";
+        const x = d3
+          .scaleLinear()
+          .domain([0, 1])
+          .range([0, width - 170]);
+        stage.text(`${state.step + 1}/3 · ${stages[state.step]}`);
+        previous.property("disabled", state.step === 0);
+        next.property("disabled", state.step === 2);
+        kOutput.text(state.k);
+        tOutput.text(state.temperature.toFixed(1));
+        swatch.style("background", color);
+        svg
+          .attr("viewBox", `0 0 ${width} 300`)
+          .attr(
+            "aria-label",
+            `${stages[state.step]}. ${values.map((value, i) => `Expert ${i + 1}: ${(value * 100).toFixed(1)}%`).join(". ")}`,
+          );
+        svg
+          .selectAll("text.routing-axis")
+          .data([0])
+          .join("text")
+          .attr("class", "routing-axis")
+          .attr("x", 0)
+          .attr("y", 25)
+          .style("fill", "var(--text-color)")
+          .style("font-size", "14px")
+          .text(state.step === 2 ? "Mixture weight" : "Router probability");
+        const rows = svg
+          .selectAll("g.routing-row")
+          .data(values)
+          .join("g")
+          .attr("class", "routing-row")
+          .attr("transform", (_, i) => `translate(0, ${55 + i * 60})`);
+        rows.each(function (value, i) {
+          const selected = state.step > 0 && result.selected.includes(i);
+          const row = d3.select(this);
+          row
+            .selectAll("text.routing-expert")
+            .data([i])
+            .join("text")
+            .attr("class", "routing-expert")
+            .attr("y", 20)
+            .style("fill", "var(--text-color)")
+            .style("font-size", "13px")
+            .text(`Expert ${i + 1}${selected ? " ✓" : ""}`);
+          row
+            .selectAll("rect")
+            .data([value])
+            .join("rect")
+            .attr("x", 90)
+            .attr("width", x(value))
+            .attr("height", 28)
+            .attr("rx", 3)
+            .style("fill", selected ? color : "var(--muted-color)")
+            .style("opacity", selected ? 1 : 0.45);
+          row
+            .selectAll("text.routing-value")
+            .data([value])
+            .join("text")
+            .attr("class", "routing-value")
+            .attr("x", width - 70)
+            .attr("y", 20)
+            .attr("data-weight", value)
+            .style("fill", "var(--text-color)")
+            .style("font-size", "14px")
+            .text(`${(value * 100).toFixed(1)}%`);
+        });
+        summary.text(
+          state.step === 2
+            ? `Mixture weight sum: ${result.weights.reduce((a, b) => a + b, 0).toFixed(3)}. Active experts: ${result.selected.map((i) => i + 1).join(", ")}.`
+            : "All experts receive probabilities; selected experts are marked before renormalization.",
+        );
+      }
+      render();
+      const observer = new ResizeObserver(render);
+      observer.observe(container);
+      window.addEventListener("palettes:updated", render);
+      window.addEventListener(
+        "pagehide",
+        () => {
+          observer.disconnect();
+          window.removeEventListener("palettes:updated", render);
+        },
+        { once: true },
+      );
+    }
+
+    const start = () => document.querySelectorAll(".d3-routing").forEach(mount);
+    if (window.d3?.select) start();
+    else {
+      let loader = document.getElementById("d3-cdn-script");
+      if (!loader) {
+        loader = document.createElement("script");
+        loader.id = "d3-cdn-script";
+        loader.src = "https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js";
+        document.head.appendChild(loader);
+      }
+      loader.addEventListener(
+        "load",
+        () => {
+          if (window.d3?.select) start();
+        },
+        { once: true },
+      );
+      // The static publication summary remains readable if the dependency cannot load.
+    }
+  })();
+</script>

@@ -1,0 +1,28 @@
+import HtmlEmbed from "../../components/HtmlEmbed.astro";
+
+## Explore the native visualization workflow
+
+These examples use the research article template's own HTML/D3 embeds [@research-template].
+They demonstrate the authoring mechanism: scoped HTML and styles, JavaScript interactions,
+SVG graphics, and the template's shared theme. They are illustrative examples, not
+evidence about a trained model.
+
+<HtmlEmbed
+  src="d3-matrix.html"
+  title="Matrix visualization"
+  desc="Upstream demonstration by Thibaud Frere, research-article-template (CC BY 4.0). Illustrative matrix values; not experimental measurements."
+/>
+
+<HtmlEmbed
+  src="d3-equation-editor.html"
+  title="Explore a mathematical function"
+  desc="Upstream interactive function plotter by Thibaud Frere, research-article-template (CC BY 4.0). Change the expression or domain to inspect the curve."
+/>
+
+Create an embed in `app/src/content/embeds/` and reference it with `HtmlEmbed` in a
+chapter. The native template supplies the surrounding card, caption, theme and
+download controls. Its article pipeline supplies math, citations, the table of contents,
+and publication exports.
+
+The [standalone function plotter](/figures/function-plotter/) demonstrates how a host
+site can reuse a visualization without rewriting it in the host's component framework.

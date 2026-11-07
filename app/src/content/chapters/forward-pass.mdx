@@ -1,0 +1,21 @@
+import HtmlEmbed from "../../components/HtmlEmbed.astro";
+
+## A homepage as an interactive explanation
+
+The [Latent Space homepage](https://www.cris96spa-latent-space.com/) introduces
+Cristian through a scripted GPT-2 forward pass. The same composition lives here
+as a native HTML/D3 embed: scrub through tokenization, prefill and decoding, inspect
+token IDs, and follow each token into the biography.
+
+<HtmlEmbed src="d3-forward-pass.html" frameless wide config={{ autoplay: false }} />
+
+Token IDs come from a captured response of the homepage's tokenizer for these exact
+strings. Attention weights, activations and candidate probabilities are deterministic
+illustrations, not measurements from GPT-2. Four representative heads and a trailing
+context window keep the diagram readable. The candidate scores are normalized over
+the displayed shortlist, not the complete vocabulary.
+
+Open the [full-width forward-pass page](/figures/forward-pass/) to reuse this same
+figure in another site. The model and composition derive from the
+[Latent Space source](https://github.com/cris96spa/latent-space/tree/db0d2bc83743748efe220886b3fbd603541a9f74/frontend/src/features/forward-pass-hero)
+under its MIT license.

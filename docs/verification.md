@@ -1,0 +1,21 @@
+# Verification
+
+`npm run check` verifies pinned upstream implementation files and standalone figure
+metadata, checks formatting of project-owned files and storyboard invariants, and builds with the native Astro
+pipeline. `npm run docs:check` checks local documentation links.
+
+`npm run test:e2e` runs Playwright against the production preview. Coverage includes
+math and citations, native embeds, navigation to standalone figures, normalization
+and temperature invariants, accessible controls, narrow viewports and theme changes.
+Browser tests serve the installed D3 package at the CDN URL for deterministic testing.
+Production uses the template's CDN dependencies; those require a separate online check.
+
+The upstream exporters have their own runtime requirements. PDF export needs Chromium;
+LaTeX export needs Pandoc. Run `npm run build` before exports so existing output reflects
+the current source. Review page breaks, formulas, captions and meaningful figure states
+in each publication format. A successful web build alone does not verify publication
+quality or scientific claims.
+
+GitHub CI uploads the static build and test reports. It does not deploy, publish a
+package or push a container. Local execution results are reported with each task;
+this document describes the checks rather than claiming they have all passed.

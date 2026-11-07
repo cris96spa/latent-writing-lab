@@ -1,0 +1,35 @@
+{
+  "name": "latent-writing-lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "workspaces": [
+    "app"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace research-article-template -- --host 127.0.0.1",
+    "build": "npm run build --workspace research-article-template",
+    "preview": "npm run preview --workspace research-article-template",
+    "export:pdf": "npm run export:pdf --workspace research-article-template --",
+    "export:latex": "npm run export:latex --workspace research-article-template --",
+    "export:images": "npm run export:images --workspace research-article-template --",
+    "latex:convert": "npm run latex:convert --workspace research-article-template --",
+    "notion:import": "npm run notion:import --workspace research-article-template --",
+    "sync:template:dry": "npm run sync:template:dry --workspace research-article-template",
+    "check": "npm run content:check && npm run format:check && npm run test:models && npm run build",
+    "content:check": "node tools/check-content.mjs",
+    "format": "prettier --write README.md AGENTS.md docs tools e2e package.json playwright.config.ts app/src/content/article.mdx app/src/content/chapters app/src/content/figures.json app/src/content/embeds/d3-routing.html app/src/content/embeds/d3-forward-pass.html app/src/pages/figures",
+    "format:check": "prettier --check README.md AGENTS.md docs tools e2e package.json playwright.config.ts app/src/content/article.mdx app/src/content/chapters app/src/content/figures.json app/src/content/embeds/d3-routing.html app/src/content/embeds/d3-forward-pass.html app/src/pages/figures",
+    "test:e2e": "playwright test",
+    "docs:check": "node tools/check-docs.mjs",
+    "test:models": "node --test tools/tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "prettier": "^3.8.1",
+    "prettier-plugin-astro": "^0.14.1"
+  }
+}

@@ -1,0 +1,1695 @@
+<!-- Port of cris96spa/latent-space at db0d2bc83743748efe220886b3fbd603541a9f74.
+MIT License
+
+Copyright (c) 2025 Giovanni Giacometti
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<div class="d3-forward-pass">
+  <p>
+    Who is Cristian? A scripted GPT-2 forward-pass illustration from Latent Space. Enable JavaScript
+    to inspect the tokenization, attention heads, residual stream and generated biography.
+  </p>
+</div>
+<style>
+  @font-face {
+    font-family: "Latent Inter";
+    src: url("/fonts/latent-space/inter-latin-wght-normal.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Latent Mono";
+    src: url("/fonts/latent-space/jetbrains-mono-latin-wght-normal.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 100 800;
+    font-display: swap;
+  }
+  /* Latent Space's scoped design tokens preserve the source hero's visual identity. */
+  .d3-forward-pass {
+    --fp-bg: #f8fafc;
+    --fp-panel: #fff;
+    --fp-fg: #0f172a;
+    --fp-muted: #475569;
+    --fp-border: #e2e8f0;
+    --fp-brand: #0ea5e9;
+    --fp-blue: #38bdf8;
+    --fp-pale: #7dd3fc;
+    --fp-strong: #0369a1;
+    --fp-title: #0284c7;
+    --fp-amber: #fbbf24;
+    --fp-yellow: #fcd34d;
+    --fp-violet: #c084fc;
+    --fp-teal: #14b8a6;
+    --fp-lime: #84cc16;
+    --fp-orange: #f59e0b;
+    --fp-red: #f43f5e;
+    --fp-purple: #a855f7;
+    --fp-token-light: 15%;
+    --fp-token-dark: 40%;
+    --fp-sans: "Latent Inter", system-ui, sans-serif;
+    --fp-mono: "Latent Mono", ui-monospace, monospace;
+    color: var(--fp-fg);
+    background: var(--fp-bg);
+    font-family: var(--fp-sans);
+    font-size: 16px;
+    line-height: 1.5;
+    max-width: 976px;
+    margin: auto;
+    padding: 0;
+    isolation: isolate;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-align: left;
+  }
+  [data-theme="dark"] .d3-forward-pass {
+    --fp-bg: #0b1220;
+    --fp-panel: #0f1a2e;
+    --fp-fg: #e2e8f0;
+    --fp-muted: #94a3b8;
+    --fp-border: #1e293b;
+    --fp-title: #38bdf8;
+    --fp-strong: #7dd3fc;
+    --fp-token-light: 25%;
+    --fp-token-dark: 45%;
+    color-scheme: dark;
+  }
+  .d3-forward-pass * {
+    box-sizing: border-box;
+  }
+  .d3-forward-pass p,
+  .d3-forward-pass .fp-heading,
+  .d3-forward-pass fieldset {
+    margin: 0;
+  }
+  .d3-forward-pass .fp-eyebrow {
+    font: 12px var(--fp-mono);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--fp-muted);
+    margin: 0 0 16px;
+  }
+  .d3-forward-pass .fp-eyebrow a {
+    color: var(--fp-title);
+    background: none;
+    border: 0;
+    text-decoration: underline;
+  }
+  .d3-forward-pass .fp-heading {
+    font-family: var(--fp-sans);
+    font-size: 60px;
+    font-weight: 600;
+    letter-spacing: -1.5px;
+    line-height: 1;
+    margin-bottom: 32px;
+    border: 0;
+    padding: 0;
+    color: var(--fp-fg);
+  }
+  .d3-forward-pass .fp-heading span {
+    color: var(--fp-title);
+  }
+  .d3-forward-pass .fp-card {
+    overflow: hidden;
+    border: 1px solid var(--fp-border);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--fp-panel) 60%, transparent);
+    box-shadow: 0 8px 30px color-mix(in srgb, var(--fp-brand) 18%, transparent);
+  }
+  .d3-forward-pass .fp-prompt-wrap {
+    padding: 16px;
+    border-bottom: 1px solid var(--fp-border);
+  }
+  .d3-forward-pass .fp-prompt {
+    border: 1px solid var(--fp-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: color-mix(in srgb, var(--fp-bg) 50%, transparent);
+  }
+  .d3-forward-pass .fp-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .d3-forward-pass .fp-kicker {
+    font: 11px var(--fp-mono);
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+    color: var(--fp-strong);
+  }
+  .d3-forward-pass .fp-view {
+    display: inline-flex;
+    padding: 2px;
+    border: 1px solid var(--fp-border);
+    border-radius: 8px;
+    gap: 0;
+    background: var(--fp-panel);
+    min-width: 0;
+  }
+  .d3-forward-pass .fp-view label {
+    position: relative;
+    display: block;
+    cursor: pointer;
+    padding: 2px 10px;
+    border-radius: 6px;
+    font: 11px var(--fp-mono);
+    color: var(--fp-muted);
+  }
+  .d3-forward-pass .fp-view label:has(input:checked) {
+    background: #0369a1;
+    color: white;
+    font-weight: 600;
+  }
+  .d3-forward-pass .fp-radio {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+  .d3-forward-pass[data-phase="complete"] .fp-falling {
+    display: none;
+  }
+  .d3-forward-pass .fp-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .d3-forward-pass .fp-prompt-tokens {
+    display: block;
+    font: 14px/2 var(--fp-mono);
+    margin-top: 8px;
+  }
+  .d3-forward-pass .fp-counts {
+    font: 11px/1.5 var(--fp-mono);
+    color: var(--fp-muted);
+    margin-top: 4px;
+  }
+  .d3-forward-pass .fp-strip {
+    border-bottom: 1px solid var(--fp-border);
+    padding: 8px 16px;
+    font: 11px/1.5 var(--fp-mono);
+    color: var(--fp-muted);
+  }
+  .d3-forward-pass .fp-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .d3-forward-pass .fp-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--fp-border);
+    flex: none;
+  }
+  .d3-forward-pass[data-playing="true"] .fp-dot {
+    background: var(--fp-brand);
+    animation: fp-pulse 1s ease-in-out infinite;
+  }
+  .d3-forward-pass .fp-phase {
+    min-width: 17ch;
+  }
+  .d3-forward-pass .fp-cache {
+    white-space: nowrap;
+  }
+  .d3-forward-pass .fp-diagram {
+    padding: 20px;
+  }
+  .d3-forward-pass svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    font-family: var(--fp-mono);
+    overflow: visible;
+  }
+  .d3-forward-pass .fp-controls {
+    padding: 24px;
+    border-top: 1px solid var(--fp-border);
+  }
+  .d3-forward-pass .fp-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .d3-forward-pass button {
+    appearance: none;
+    font: 14px/20px var(--fp-sans);
+    color: var(--fp-fg);
+    background: transparent;
+    border: 1px solid var(--fp-border);
+    border-radius: 8px;
+    padding: 8px 16px;
+    box-shadow: none;
+    cursor: pointer;
+    filter: none;
+    transition: background-color 150ms;
+  }
+  .d3-forward-pass button:hover {
+    background: color-mix(in srgb, var(--fp-brand) 8%, transparent);
+  }
+  .d3-forward-pass button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .d3-forward-pass :focus-visible {
+    outline: 2px solid var(--fp-brand);
+    outline-offset: 3px;
+  }
+  .d3-forward-pass label:focus-within {
+    outline: 2px solid var(--fp-brand);
+    outline-offset: 2px;
+  }
+  .d3-forward-pass .fp-position,
+  .d3-forward-pass .fp-caption {
+    font: 12px/1.6 var(--fp-mono);
+    color: var(--fp-muted);
+  }
+  .d3-forward-pass .fp-caption {
+    min-height: 3.2em;
+  }
+  .d3-forward-pass .fp-scrub {
+    display: block;
+    margin: 12px 0;
+    width: 100%;
+  }
+  .d3-forward-pass input[type="range"] {
+    display: block;
+    width: 100%;
+    height: 6px;
+    padding: 0;
+    border: 0;
+    accent-color: var(--fp-brand);
+    cursor: pointer;
+  }
+  .d3-forward-pass .fp-output {
+    padding: 24px;
+    border-top: 1px solid var(--fp-border);
+    background: color-mix(in srgb, var(--fp-bg) 40%, transparent);
+  }
+  .d3-forward-pass .fp-output-head {
+    font: 11px/1.5 var(--fp-mono);
+    color: var(--fp-muted);
+    margin-bottom: 8px;
+    min-height: 17px;
+  }
+  .d3-forward-pass .fp-bio {
+    display: grid;
+    position: relative;
+    min-height: 160px;
+    font: 18px/2 var(--fp-sans);
+    letter-spacing: -0.45px;
+  }
+  .d3-forward-pass .fp-bio-sizer,
+  .d3-forward-pass .fp-bio-tokens {
+    grid-area: 1/1;
+    white-space: pre-wrap;
+  }
+  .d3-forward-pass .fp-bio-sizer {
+    visibility: hidden;
+  }
+  .d3-forward-pass[data-view="ids"] .fp-bio-tokens {
+    position: absolute;
+    inset: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-content: start;
+  }
+  .d3-forward-pass[data-view="ids"] .fp-prompt-tokens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .d3-forward-pass .fp-token {
+    border-radius: 3px;
+    color: var(--fp-fg);
+    background: color-mix(in srgb, var(--chip) var(--alpha), transparent);
+  }
+  .d3-forward-pass .fp-token.fp-fresh {
+    outline: 1px solid #b45309;
+  }
+  .d3-forward-pass .fp-token small {
+    font: 0.6em var(--fp-mono);
+    color: var(--fp-muted);
+    margin-left: 2px;
+  }
+  .d3-forward-pass[data-view="ids"] .fp-token {
+    white-space: nowrap;
+    font: 0.85em/2 var(--fp-mono);
+    padding: 0 2px;
+  }
+  .d3-forward-pass[data-highlight="false"] .fp-bio .fp-token {
+    background: transparent;
+  }
+  .d3-forward-pass .fp-output-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+  .d3-forward-pass .fp-highlight {
+    font: 11px/1.5 var(--fp-mono);
+    border-radius: 6px;
+    padding: 2px 8px;
+    color: var(--fp-muted);
+  }
+  .d3-forward-pass .fp-highlight[aria-pressed="true"] {
+    background: #0369a1;
+    color: white;
+    font-weight: 600;
+  }
+  .d3-forward-pass .fp-cursor {
+    color: var(--fp-blue);
+    animation: fp-cursor 1s step-end infinite;
+  }
+  .d3-forward-pass .fp-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+    font: 11px/1.6 var(--fp-mono);
+    color: var(--fp-muted);
+  }
+  .d3-forward-pass .fp-legend i {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    vertical-align: middle;
+    margin-right: 4px;
+    border: 1px solid var(--fp-border);
+  }
+  .d3-forward-pass .fp-note {
+    font: 12px/1.7 var(--fp-sans);
+    color: var(--fp-muted);
+    margin-top: 8px;
+  }
+  .d3-forward-pass .fp-tooltip {
+    position: absolute;
+    pointer-events: none;
+    max-width: 280px;
+    padding: 8px 10px;
+    background: var(--fp-panel);
+    color: var(--fp-fg);
+    border: 1px solid var(--fp-border);
+    border-radius: 8px;
+    font: 12px/1.5 var(--fp-mono);
+    z-index: 2;
+  }
+  .d3-forward-pass[data-playing="false"] svg * {
+    animation-play-state: paused !important;
+  }
+  @keyframes fp-flow {
+    from {
+      stroke-dashoffset: 20;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes fp-pulse {
+    0%,
+    100% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  @keyframes fp-cursor {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+  @keyframes fp-token-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fp-emit {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(var(--fp-distance));
+    }
+  }
+  @media (max-width: 640px) {
+    .d3-forward-pass .fp-heading {
+      font-size: 36px;
+      letter-spacing: -0.9px;
+    }
+    .d3-forward-pass .fp-prompt-wrap,
+    .d3-forward-pass .fp-diagram {
+      padding: 12px;
+    }
+    .d3-forward-pass .fp-controls,
+    .d3-forward-pass .fp-output {
+      padding: 16px;
+    }
+    .d3-forward-pass .fp-bio {
+      font-size: 16px;
+    }
+    .d3-forward-pass .fp-strip {
+      gap: 8px;
+      font-size: 10px;
+    }
+    .d3-forward-pass .fp-cache {
+      font-size: 10px;
+    }
+    .d3-forward-pass .fp-output-head {
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .d3-forward-pass * {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+  @media print {
+    .d3-forward-pass .fp-controls,
+    .d3-forward-pass .fp-view,
+    .d3-forward-pass .fp-output-footer,
+    .d3-forward-pass .fp-cursor {
+      display: none;
+    }
+    .d3-forward-pass * {
+      animation: none !important;
+      transition: none !important;
+    }
+    .d3-forward-pass .fp-card {
+      box-shadow: none;
+    }
+  }
+</style>
+
+<script>
+  (() => {
+    // BEGIN FORWARD PASS MODEL
+    var ForwardPassModel = (() => {
+      var __defProp = Object.defineProperty;
+      var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+      var __getOwnPropNames = Object.getOwnPropertyNames;
+      var __hasOwnProp = Object.prototype.hasOwnProperty;
+      var __export = (target, all) => {
+        for (var name in all) __defProp(target, name, { get: all[name], enumerable: true });
+      };
+      var __copyProps = (to, from, except, desc) => {
+        if ((from && typeof from === "object") || typeof from === "function") {
+          for (let key of __getOwnPropNames(from))
+            if (!__hasOwnProp.call(to, key) && key !== except)
+              __defProp(to, key, {
+                get: () => from[key],
+                enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable,
+              });
+        }
+        return to;
+      };
+      var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+      // <stdin>
+      var stdin_exports = {};
+      __export(stdin_exports, {
+        ATTENTION_HEADS: () => ATTENTION_HEADS,
+        COMPACT_DIAGRAM_LAYOUT: () => COMPACT_DIAGRAM_LAYOUT,
+        DRAWN_HEAD_COUNT: () => DRAWN_HEAD_COUNT,
+        FORWARD_PASS_PHASES: () => FORWARD_PASS_PHASES,
+        FORWARD_PASS_STAGES: () => FORWARD_PASS_STAGES,
+        FULL_DIAGRAM_LAYOUT: () => FULL_DIAGRAM_LAYOUT,
+        MLP_UNIT_COUNT: () => MLP_UNIT_COUNT,
+        TARGET_MODEL: () => TARGET_MODEL,
+        TOP_K: () => TOP_K,
+        attentionEdgesForStep: () => attentionEdgesForStep,
+        buildDistractorVocabulary: () => buildDistractorVocabulary,
+        buildForwardPassFrames: () => buildForwardPassFrames,
+        candidatesForStep: () => candidatesForStep,
+        centerX: () => centerX,
+        contextRowY: () => contextRowY,
+        frameDelayMs: () => frameDelayMs,
+        groupTokensByGrapheme: () => groupTokensByGrapheme,
+        hashUnitInterval: () => hashUnitInterval,
+        idleFrame: () => idleFrame,
+        mlpActivationsForStep: () => mlpActivationsForStep,
+        panelBottom: () => panelBottom,
+        rightX: () => rightX,
+        tokenLabel: () => tokenLabel,
+        visibleContextTokens: () => visibleContextTokens,
+      });
+
+      // Latent Space: lib/hash.ts
+      var FNV_OFFSET_BASIS = 2166136261;
+      var FNV_PRIME = 16777619;
+      var UINT32_RANGE = 2 ** 32;
+      function hashUnitInterval(seed) {
+        let hash = FNV_OFFSET_BASIS;
+        for (let position = 0; position < seed.length; position++) {
+          hash ^= seed.charCodeAt(position);
+          hash = Math.imul(hash, FNV_PRIME);
+        }
+        return (hash >>> 0) / UINT32_RANGE;
+      }
+
+      // Latent Space: features/forward-pass-hero/sampling.ts
+      function softmax(logits) {
+        if (logits.length === 0) {
+          return [];
+        }
+        const maxLogit = Math.max(...logits);
+        const weights = logits.map((logit) => Math.exp(logit - maxLogit));
+        const total = weights.reduce((sum, weight) => sum + weight, 0);
+        return weights.map((weight) => weight / total);
+      }
+
+      // Latent Space: features/forward-pass-hero/frames.ts
+      var FORWARD_PASS_STAGES = ["embed", "qkv", "attention", "mlp", "logits", "sample"];
+      var FORWARD_PASS_PHASES = ["tokenize", "prefill", "decode", "complete"];
+      var MLP_UNIT_COUNT = 12;
+      var TOP_K = 5;
+      var ATTENTION_WINDOW = 8;
+      var PROPER_NOUN_SALIENCE = 3.4;
+      var DELIMITER_SALIENCE = 2.9;
+      var BACKGROUND_SALIENCE = 0.2;
+      var RECENCY_PEAK = 3;
+      var RECENCY_DECAY = 0.62;
+      var CONTENT_LENGTH_WEIGHT = 0.34;
+      var CONTENT_JITTER = 1.1;
+      var MAX_CONTENT_LENGTH = 8;
+      var MIN_LOGIT_MARGIN = 0.08;
+      var LOGIT_MARGIN_STEP = 0.6;
+      var LOGIT_MARGIN_SPREAD = 2.2;
+      var PREFILL_STAGE_DELAY_MS = {
+        embed: 380,
+        qkv: 480,
+        attention: 700,
+        mlp: 480,
+        logits: 560,
+        sample: 420,
+      };
+      var PHASE_DELAY_MS = {
+        tokenize: 170,
+        prefill: 460,
+        decode: 38,
+        complete: 0,
+      };
+      var DISTRACTOR_VOCABULARY = [
+        " the",
+        " a",
+        " and",
+        " models",
+        " inference",
+        " PyTorch",
+        " GPU",
+        " loss",
+        " attention",
+        " gradients",
+        " tokens",
+        " latency",
+      ];
+      function isProperNoun(token) {
+        return /^[A-Z]/.test(token.text.trim());
+      }
+      function isDelimiter(token) {
+        return /^[^\sA-Za-z0-9]+$/.test(token.text.trim());
+      }
+      var ATTENTION_HEADS = [
+        {
+          index: 0,
+          label: "recency",
+          salience: (_token, distance) => RECENCY_PEAK - distance * RECENCY_DECAY,
+        },
+        {
+          index: 1,
+          label: "proper-noun",
+          // A sentence-initial capital (context position 0, e.g. "Who") is grammar, not a
+          // name, so the head skips it and lands on the actual proper noun.
+          salience: (token) =>
+            isProperNoun(token) && token.index > 0 ? PROPER_NOUN_SALIENCE : BACKGROUND_SALIENCE,
+        },
+        {
+          index: 2,
+          label: "delimiter",
+          salience: (token) => (isDelimiter(token) ? DELIMITER_SALIENCE : BACKGROUND_SALIENCE),
+        },
+        {
+          index: 3,
+          label: "content",
+          salience: (token, _distance, seed) =>
+            Math.min(token.text.trim().length, MAX_CONTENT_LENGTH) * CONTENT_LENGTH_WEIGHT +
+            hashUnitInterval(`${seed}:${token.text}`) * CONTENT_JITTER,
+        },
+      ];
+      function attentionEdgesForStep(context, queryIndex, step) {
+        const windowStart = Math.max(0, queryIndex - ATTENTION_WINDOW + 1);
+        const keys = context.slice(windowStart, queryIndex + 1);
+        if (keys.length === 0) {
+          return [];
+        }
+        return ATTENTION_HEADS.flatMap((head) => {
+          const seed = `head:${head.index}:${step}`;
+          const scores = keys.map((key) => head.salience(key, queryIndex - key.index, seed));
+          return softmax(scores).map((weight, offset) => ({
+            head: head.index,
+            keyIndex: keys[offset].index,
+            weight,
+          }));
+        });
+      }
+      function mlpActivationsForStep(step) {
+        return Array.from({ length: MLP_UNIT_COUNT }, (_, unit) =>
+          hashUnitInterval(`mlp:${step}:${unit}`),
+        );
+      }
+      function buildDistractorVocabulary(outputTokens) {
+        const spoken = outputTokens.map((token) => token.text).filter((text) => text !== "");
+        return [.../* @__PURE__ */ new Set([...spoken, ...DISTRACTOR_VOCABULARY])];
+      }
+      function pickDistractors(step, selectedText, vocabulary, count) {
+        const start = Math.floor(hashUnitInterval(`vocab:${step}`) * vocabulary.length);
+        const picked = [];
+        for (let offset = 0; offset < vocabulary.length && picked.length < count; offset++) {
+          const candidate = vocabulary[(start + offset) % vocabulary.length];
+          if (candidate !== selectedText && !picked.includes(candidate)) {
+            picked.push(candidate);
+          }
+        }
+        return picked;
+      }
+      function candidatesForStep(step, selectedToken, vocabulary) {
+        const selectedText =
+          selectedToken.text !== "" ? selectedToken.text : `#${selectedToken.id}`;
+        const distractors = pickDistractors(step, selectedText, vocabulary, TOP_K - 1);
+        const margins = distractors.map(
+          (_, rank) =>
+            MIN_LOGIT_MARGIN +
+            rank * LOGIT_MARGIN_STEP +
+            LOGIT_MARGIN_SPREAD * hashUnitInterval(`logit:${step}:${rank}`),
+        );
+        const probabilities = softmax([0, ...margins.map((margin) => -margin)]);
+        return [
+          { text: selectedText, probability: probabilities[0], selected: true },
+          ...distractors.map((text, rank) => ({
+            text,
+            probability: probabilities[rank + 1],
+            selected: false,
+          })),
+        ].sort((left, right) => right.probability - left.probability);
+      }
+      function toContext(promptTokens, outputTokens) {
+        return [
+          ...promptTokens.map((token) => ({
+            index: token.index,
+            text: token.text,
+            id: token.id,
+            origin: "prompt",
+          })),
+          ...outputTokens.map((token, offset) => ({
+            index: promptTokens.length + offset,
+            text: token.text,
+            id: token.id,
+            origin: "generated",
+          })),
+        ];
+      }
+      function buildForwardPassFrames(promptTokens, outputTokens) {
+        const fullContext = toContext(promptTokens, outputTokens);
+        const vocabulary = buildDistractorVocabulary(outputTokens);
+        const frames = [];
+        let index = 0;
+        for (let revealed = 1; revealed <= promptTokens.length; revealed++) {
+          frames.push({
+            index: index++,
+            step: 0,
+            phase: "tokenize",
+            activeStage: null,
+            context: fullContext.slice(0, revealed),
+            queryIndex: revealed - 1,
+            attention: [],
+            activations: [],
+            kvCacheLength: 0,
+            logits: [],
+            sampledToken: null,
+            emittedTokens: [],
+            isComplete: false,
+          });
+        }
+        const prefillContext = fullContext.slice(0, promptTokens.length);
+        const prefillQueryIndex = prefillContext.length - 1;
+        const prefillAttention = attentionEdgesForStep(prefillContext, prefillQueryIndex, 0);
+        const prefillActivations = mlpActivationsForStep(0);
+        const prefillLogits =
+          outputTokens.length > 0 ? candidatesForStep(0, outputTokens[0], vocabulary) : [];
+        FORWARD_PASS_STAGES.forEach((stage, stagePosition) => {
+          const reached = (id) => stagePosition >= FORWARD_PASS_STAGES.indexOf(id);
+          const emitting = stage === "sample" && outputTokens.length > 0;
+          frames.push({
+            index: index++,
+            step: 0,
+            phase: "prefill",
+            activeStage: stage,
+            context: prefillContext,
+            queryIndex: prefillQueryIndex,
+            attention: reached("attention") ? prefillAttention : [],
+            activations: reached("mlp") ? prefillActivations : [],
+            // Prefill runs every prompt position in one pass, so the cache fills all at once.
+            kvCacheLength: reached("qkv") ? prefillContext.length : 0,
+            logits: reached("logits") ? prefillLogits : [],
+            sampledToken: emitting ? outputTokens[0] : null,
+            emittedTokens: emitting ? outputTokens.slice(0, 1) : [],
+            isComplete: false,
+          });
+        });
+        for (let step = 1; step < outputTokens.length; step++) {
+          const context = fullContext.slice(0, promptTokens.length + step);
+          const queryIndex = context.length - 1;
+          frames.push({
+            index: index++,
+            step,
+            phase: "decode",
+            activeStage: FORWARD_PASS_STAGES[step % FORWARD_PASS_STAGES.length],
+            context,
+            queryIndex,
+            attention: attentionEdgesForStep(context, queryIndex, step),
+            activations: mlpActivationsForStep(step),
+            kvCacheLength: context.length,
+            logits: candidatesForStep(step, outputTokens[step], vocabulary),
+            sampledToken: outputTokens[step],
+            emittedTokens: outputTokens.slice(0, step + 1),
+            isComplete: false,
+          });
+        }
+        const finalStep = Math.max(0, outputTokens.length - 1);
+        frames.push({
+          index: index++,
+          step: finalStep,
+          phase: "complete",
+          activeStage: null,
+          context: fullContext,
+          queryIndex: fullContext.length - 1,
+          attention: attentionEdgesForStep(fullContext, fullContext.length - 1, finalStep),
+          activations: mlpActivationsForStep(finalStep),
+          kvCacheLength: fullContext.length,
+          logits:
+            outputTokens.length > 0
+              ? candidatesForStep(finalStep, outputTokens[finalStep], vocabulary)
+              : [],
+          sampledToken: null,
+          emittedTokens: outputTokens.slice(),
+          isComplete: true,
+        });
+        return frames;
+      }
+      function frameDelayMs(frame) {
+        if (frame.phase === "prefill" && frame.activeStage !== null) {
+          return PREFILL_STAGE_DELAY_MS[frame.activeStage];
+        }
+        return PHASE_DELAY_MS[frame.phase];
+      }
+      function idleFrame() {
+        return {
+          index: -1,
+          step: 0,
+          phase: "tokenize",
+          activeStage: null,
+          context: [],
+          queryIndex: -1,
+          attention: [],
+          activations: [],
+          kvCacheLength: 0,
+          logits: [],
+          sampledToken: null,
+          emittedTokens: [],
+          isComplete: false,
+        };
+      }
+
+      // Latent Space: features/forward-pass-hero/diagram/layout.ts
+      var FULL_DIAGRAM_LAYOUT = {
+        width: 1e3,
+        height: 420,
+        panelTop: 74,
+        panelHeight: 236,
+        railY: 192,
+        laneY: 356,
+        contextWindow: 7,
+        candidateCount: 5,
+        labelSize: 11,
+        tokenSize: 12,
+        verbose: true,
+        maxTokenChars: 12,
+        maxCandidateChars: 18,
+        trailLength: 5,
+        context: { x: 6, width: 112 },
+        embed: { x: 128, width: 68 },
+        qkv: { x: 220, width: 90 },
+        attention: { x: 324, width: 176 },
+        mlp: { x: 554, width: 126 },
+        unembed: { x: 714, width: 32 },
+        logits: { x: 752, width: 214 },
+        attentionNormX: 206,
+        mlpNormX: 540,
+        attentionAddX: 512,
+        mlpAddX: 692,
+      };
+      var COMPACT_DIAGRAM_LAYOUT = {
+        width: 430,
+        height: 380,
+        panelTop: 66,
+        panelHeight: 190,
+        railY: 161,
+        laneY: 300,
+        contextWindow: 5,
+        candidateCount: 3,
+        labelSize: 11,
+        tokenSize: 11,
+        verbose: false,
+        maxTokenChars: 7,
+        maxCandidateChars: 6,
+        trailLength: 3,
+        context: { x: 2, width: 62 },
+        embed: { x: 70, width: 36 },
+        qkv: null,
+        attention: { x: 116, width: 106 },
+        mlp: { x: 244, width: 62 },
+        unembed: null,
+        logits: { x: 328, width: 100 },
+        attentionNormX: null,
+        mlpNormX: null,
+        attentionAddX: 232,
+        mlpAddX: 316,
+      };
+      function tokenLabel(text, maxChars) {
+        const trimmed = text.trim();
+        if (trimmed.length === 0) {
+          return "\xB7";
+        }
+        return trimmed.length > maxChars ? `${trimmed.slice(0, maxChars - 1)}\u2026` : trimmed;
+      }
+      function centerX(box) {
+        return box.x + box.width / 2;
+      }
+      function rightX(box) {
+        return box.x + box.width;
+      }
+      function panelBottom(layout) {
+        return layout.panelTop + layout.panelHeight;
+      }
+      function visibleContextTokens(context, layout) {
+        return context.slice(Math.max(0, context.length - layout.contextWindow));
+      }
+      function contextRowY(slot, visibleCount, layout) {
+        const inset = 14;
+        const top = layout.panelTop + inset;
+        const usable = layout.panelHeight - inset * 2;
+        if (visibleCount <= 1) {
+          return top + usable / 2;
+        }
+        return top + (slot * usable) / (visibleCount - 1);
+      }
+
+      // Latent Space: features/forward-pass-hero/tokenGroups.ts
+      var graphemeSegmenter = new Intl.Segmenter(void 0, { granularity: "grapheme" });
+      function groupTokensByGrapheme(tokens) {
+        const fullText = tokens.map((token) => token.text).join("");
+        const characters = [...fullText];
+        const graphemeBoundaries = /* @__PURE__ */ new Set();
+        let characterCount = 0;
+        for (const { segment } of graphemeSegmenter.segment(fullText)) {
+          characterCount += [...segment].length;
+          graphemeBoundaries.add(characterCount);
+        }
+        const groups = [];
+        let buffer = [];
+        let groupStart = 0;
+        let position = 0;
+        for (let index = 0; index < tokens.length; index++) {
+          const token = tokens[index];
+          buffer.push(token);
+          position += [...token.text].length;
+          const nextIsContinuation = index + 1 < tokens.length && tokens[index + 1].text === "";
+          if (graphemeBoundaries.has(position) && !nextIsContinuation) {
+            groups.push({ tokens: buffer, text: characters.slice(groupStart, position).join("") });
+            buffer = [];
+            groupStart = position;
+          }
+        }
+        if (buffer.length > 0) {
+          groups.push({ tokens: buffer, text: characters.slice(groupStart).join("") });
+        }
+        return groups;
+      }
+
+      // Latent Space: features/forward-pass-hero/architecture.ts
+      var TARGET_MODEL = {
+        label: "gpt-2 \xB7 124m",
+        blockCount: 12,
+        queryHeadCount: 12,
+        keyValueHeadCount: 12,
+        hiddenSize: 768,
+        feedForwardSize: 3072,
+        vocabularySize: 50257,
+        contextLength: 1024,
+        normalization: "layernorm",
+        positionalEncoding: "learned absolute",
+        feedForwardActivation: "gelu_new",
+      };
+      var DRAWN_HEAD_COUNT = 4;
+      return __toCommonJS(stdin_exports);
+    })();
+    // END FORWARD PASS MODEL
+    const {
+      FULL_DIAGRAM_LAYOUT: FULL,
+      COMPACT_DIAGRAM_LAYOUT: COMPACT,
+      TARGET_MODEL: MODEL,
+      ATTENTION_HEADS: HEADS,
+      hashUnitInterval: hash,
+      contextRowY: rowY,
+      centerX: cx,
+      rightX: rx,
+      panelBottom,
+      tokenLabel,
+      groupTokensByGrapheme,
+      buildForwardPassFrames,
+      frameDelayMs,
+    } = ForwardPassModel;
+    const c = {
+      fg: "var(--fp-fg)",
+      muted: "var(--fp-muted)",
+      border: "var(--fp-border)",
+      panel: "var(--fp-panel)",
+      brand: "var(--fp-brand)",
+      blue: "var(--fp-blue)",
+      pale: "var(--fp-pale)",
+      strong: "var(--fp-strong)",
+      amber: "var(--fp-amber)",
+      violet: "var(--fp-violet)",
+      yellow: "var(--fp-yellow)",
+    };
+    const headColors = [c.amber, c.blue, c.violet, c.yellow];
+    const tones = [c.blue, c.violet, c.amber];
+    const tokenColors = [
+      "var(--fp-brand)",
+      "var(--fp-teal)",
+      "var(--fp-lime)",
+      "var(--fp-orange)",
+      "var(--fp-red)",
+      "var(--fp-purple)",
+    ];
+    const captions = {
+      tokenize: "splitting the prompt into tokens",
+      prefill: "one parallel pass over every prompt position, filling the KV cache",
+      decode: "one pass per token, reusing the cache",
+      complete: "done - the KV cache is warm and nobody paid for a GPU",
+    };
+
+    // SVG primitives retain the original panel coordinates; keyed joins preserve moving tokens.
+    function draw(svg, frame, l, markerId) {
+      const items = [];
+      const add = (tag, key, attrs, text, tooltip) =>
+        items.push({ tag, key, attrs, text, tooltip });
+      const line = (key, x1, y1, x2, y2, stroke = c.border, extra = {}) =>
+        add("line", key, { x1, y1, x2, y2, stroke, "stroke-width": 1, ...extra });
+      const rect = (key, x, y, width, height, fill, extra = {}, tooltip) =>
+        add("rect", key, { x, y, width, height, rx: 2, fill, ...extra }, null, tooltip);
+      const text = (
+        key,
+        x,
+        y,
+        value,
+        fill = c.muted,
+        size = l.labelSize,
+        anchor = "middle",
+        extra = {},
+      ) =>
+        add("text", key, { x, y, fill, "font-size": size, "text-anchor": anchor, ...extra }, value);
+      const active = (stage) => frame.activeStage === stage;
+      const visible = frame.context.slice(-l.contextWindow),
+        parallel = frame.phase === "prefill";
+      const blockStart = (l.attentionNormX ?? (l.qkv ?? l.attention).x) - 12,
+        blockEnd = l.mlpAddX + 14,
+        blockTop = l.panelTop - 26;
+      svg
+        .attr("viewBox", `0 0 ${l.width} ${l.height}`)
+        .attr("data-layout", l.verbose ? "full" : "compact");
+      line("rail", rx(l.embed), l.railY, (l.unembed ?? l.logits).x, l.railY);
+      rect(
+        "block",
+        blockStart,
+        blockTop,
+        blockEnd - blockStart,
+        panelBottom(l) + 4 - blockTop,
+        "none",
+        { rx: 12, stroke: c.border, "stroke-dasharray": "2 6" },
+      );
+      text(
+        "block-label",
+        (blockStart + blockEnd) / 2,
+        blockTop - 10,
+        l.verbose ? "gpt-2 · 124m · transformer block × 12 · residual stream" : "block × 12",
+      );
+      for (const [key, x] of [
+        ["attention", l.attentionNormX],
+        ["mlp", l.mlpNormX],
+      ]) {
+        if (x === null) continue;
+        const h = Math.min(120, l.panelHeight * 0.5);
+        rect("norm-" + key, x, l.railY - h / 2, 8, h, c.pale, {
+          rx: 3,
+          stroke: c.border,
+          "fill-opacity": 0.5,
+        });
+        text("norm-label-" + key, x + 4, l.railY, "l-norm", c.fg, 8, "middle", {
+          "dominant-baseline": "central",
+          transform: `rotate(-90 ${x + 4} ${l.railY})`,
+        });
+      }
+      for (const [key, x] of [
+        ["attention", l.attentionAddX],
+        ["mlp", l.mlpAddX],
+      ]) {
+        add("circle", "join-" + key, { cx: x, cy: l.railY, r: 8, fill: c.panel, stroke: c.border });
+        text("join-label-" + key, x, l.railY + 4, "+", c.muted, 11);
+      }
+      text("context-label", cx(l.context), l.panelTop - 12, "context");
+      text(
+        "embed-label",
+        cx(l.embed),
+        l.panelTop - 12,
+        l.verbose ? "token + pos · 768" : "embed",
+        active("embed") ? c.fg : c.muted,
+      );
+      visible.forEach((token, slot) => {
+        const y = rowY(slot, visible.length, l),
+          query = parallel || token.index === frame.queryIndex,
+          cr = rx(l.context),
+          cw = (l.embed.width - 8) / 6;
+        text(
+          "token-" + token.index,
+          cr - 14,
+          y + 4,
+          tokenLabel(token.text, l.maxTokenChars),
+          token.origin === "generated" ? c.strong : c.muted,
+          l.tokenSize,
+          "end",
+        );
+        add("circle", "query-" + token.index, {
+          cx: cr - 5,
+          cy: y,
+          r: query ? 4 : 2.5,
+          fill: query ? c.brand : c.border,
+        });
+        line("embed-link-" + token.index, cr, y, l.embed.x, y, query ? c.blue : c.border);
+        for (let cell = 0; cell < 6; cell++)
+          rect(
+            `embed-${token.index}-${cell}`,
+            l.embed.x + 4 + cell * cw,
+            y - 5,
+            Math.max(2, cw - 2),
+            10,
+            tones[Math.floor(hash(`tone:${token.text}:${cell}`) * 3)],
+            {
+              opacity:
+                (0.22 + hash(`amp:${token.text}:${cell}`) * 0.72) * (active("embed") ? 1 : 0.55),
+            },
+          );
+      });
+      const labelWidth = l.verbose ? 60 : 26,
+        gx = l.attention.x + labelWidth,
+        gw = l.attention.width - labelWidth - 8,
+        gt = l.railY - 44,
+        gb = gt + 88,
+        cw = visible.length ? gw / visible.length : gw;
+      const q = visible.at(-1);
+      if (l.qkv && q) {
+        text("qkv-label", cx(l.qkv), l.panelTop - 12, "qkv", active("qkv") ? c.fg : c.muted);
+        ["Q", "K", "V"].forEach((label, p) => {
+          const x = l.qkv.x + 8 + p * 30,
+            top = l.railY - 35;
+          for (let cell = 0; cell < 5; cell++)
+            rect(`qkv-${p}-${cell}`, x, top + cell * 14, 22, 12, headColors[p], {
+              opacity:
+                (0.25 + hash(`${label}:${q.text}:${cell}`) * 0.7) * (active("qkv") ? 1 : 0.65),
+              style: active("qkv")
+                ? `animation:fp-pulse 1.1s ease-in-out ${cell * 60}ms infinite`
+                : "",
+            });
+          text("qkv-char-" + p, x + 11, top + 82, label);
+        });
+      }
+      const edges = frame.attention,
+        peaks = HEADS.map((h) =>
+          Math.max(1e-6, ...edges.filter((e) => e.head === h.index).map((e) => e.weight)),
+        );
+      HEADS.forEach((h) => {
+        const edge = edges.filter((e) => e.head === h.index).sort((a, b) => b.weight - a.weight)[0];
+        if (!edge) return;
+        const slot = visible.findIndex((t) => t.index === edge.keyIndex);
+        if (slot < 0) return;
+        line(
+          "fan-" + h.index,
+          rx(l.embed),
+          rowY(slot, visible.length, l),
+          gx,
+          gt + h.index * 22 + 11,
+          headColors[h.index],
+          {
+            "stroke-width": 0.6 + edge.weight * 2,
+            "stroke-linecap": "round",
+            opacity: active("qkv") || active("attention") ? 0.18 + edge.weight * 0.8 : 0,
+            "stroke-dasharray": active("attention") ? "4 6" : "",
+            style: active("attention")
+              ? "animation:fp-flow .7s linear infinite;transition:opacity 220ms linear"
+              : "transition:opacity 220ms linear",
+          },
+        );
+      });
+      text(
+        "attention-label",
+        cx(l.attention),
+        l.panelTop - 12,
+        l.verbose ? "mha · 12 heads" : "attention",
+        active("attention") ? c.fg : c.muted,
+      );
+      HEADS.forEach((h) => {
+        const y = gt + h.index * 22;
+        text(
+          "head-label-" + h.index,
+          gx - 6,
+          y + 14,
+          l.verbose ? h.label : `h${h.index}`,
+          c.muted,
+          l.labelSize - 2,
+          "end",
+        );
+        visible.forEach((token, slot) => {
+          const weight =
+            edges.find((e) => e.head === h.index && e.keyIndex === token.index)?.weight ?? 0;
+          rect(
+            `attn-${h.index}-${token.index}`,
+            gx + slot * cw,
+            y + 2,
+            Math.max(2, cw - 2),
+            18,
+            headColors[h.index],
+            {
+              opacity: 0.08 + (weight / peaks[h.index]) * 0.85,
+              "data-head": h.index,
+              "data-weight": weight,
+              style: "transition:opacity 140ms linear",
+            },
+            `${h.label} · ${token.text.trim() || "space"}: ${(weight * 100).toFixed(1)}% (scripted)`,
+          );
+        });
+      });
+      const reads = visible.map((t) =>
+          edges.filter((e) => e.keyIndex === t.index).reduce((s, e) => s + e.weight, 0),
+        ),
+        readPeak = Math.max(1e-6, ...reads);
+      visible.forEach((token, slot) => {
+        const cached = token.index < frame.kvCacheLength,
+          x = gx + slot * cw,
+          w = Math.max(2, cw - 2);
+        rect("cache-" + token.index, x, gb + 8, w, 10, cached ? c.brand : c.border, {
+          opacity:
+            active("attention") && cached
+              ? 0.3 + (reads[slot] / readPeak) * 0.7
+              : cached
+                ? 0.42
+                : 0.18,
+          style:
+            parallel && cached ? `animation:fp-pulse 1s ease-in-out ${slot * 40}ms infinite` : "",
+        });
+        if (cached && !parallel && token.index === frame.kvCacheLength - 1)
+          rect("cache-written", x - 1, gb + 7, w + 2, 12, "none", {
+            rx: 3,
+            stroke: c.pale,
+            "stroke-width": 1.2,
+          });
+      });
+      text("kv-label", gx - 6, gb + 17, "kv", c.muted, l.labelSize - 2, "end");
+      if (l.verbose && frame.kvCacheLength > visible.length)
+        text(
+          "kv-count",
+          cx(l.attention),
+          gb + 40,
+          `${frame.kvCacheLength} cached · ${visible.length} newest shown`,
+          c.muted,
+          l.labelSize - 1,
+        );
+      const sw = (l.mlp.width - 24) / 3,
+        hh = Math.min(l.panelHeight - 40, 12 * 13),
+        ht = l.railY - hh / 2,
+        ch = hh / 12,
+        ph = ch * 3 * 1.6,
+        pt = l.railY - ph / 2;
+      text(
+        "mlp-label",
+        cx(l.mlp),
+        l.panelTop - 12,
+        l.verbose ? "mlp · gelu · 768 → 3072" : "mlp",
+        active("mlp") ? c.fg : c.muted,
+      );
+      for (const col of [0, 2])
+        for (let cell = 0; cell < 3; cell++)
+          rect(
+            `mlp-proj-${col}-${cell}`,
+            l.mlp.x + 8 + col * (sw + 4),
+            pt + (cell * ph) / 3,
+            sw,
+            Math.max(3, ph / 3 - 3),
+            c.blue,
+            { opacity: active("mlp") ? 0.85 : 0.4 },
+          );
+      frame.activations.forEach((a, unit) =>
+        rect(
+          "mlp-" + unit,
+          l.mlp.x + 8 + sw + 4,
+          ht + unit * ch,
+          sw,
+          Math.max(2, ch - 2),
+          c.violet,
+          {
+            opacity: 0.18 + a * 0.8,
+            style: active("mlp")
+              ? `animation:fp-pulse 1s ease-in-out ${unit * 40}ms infinite`
+              : "transition:opacity 120ms linear",
+          },
+          `Illustrative hidden unit ${unit + 1}: ${a.toFixed(3)}`,
+        ),
+      );
+      if (l.unembed) {
+        for (let cell = 0; cell < 9; cell++)
+          rect(
+            "unembed-" + cell,
+            l.unembed.x,
+            l.railY - 54 + cell * 12,
+            l.unembed.width,
+            10,
+            c.blue,
+            { opacity: (0.3 + (cell % 3) * 0.22) * (active("logits") ? 1 : 0.55) },
+          );
+        text("unembed-label", cx(l.unembed), l.panelTop - 12, "unembed");
+      }
+      text(
+        "softmax-label",
+        cx(l.logits),
+        l.panelTop - 12,
+        l.verbose ? "softmax · illustrative top-5" : "softmax",
+        active("logits") ? c.fg : c.muted,
+      );
+      const rh = Math.min(32, (l.panelHeight - 60) / l.candidateCount),
+        rt = l.railY - (rh * l.candidateCount) / 2,
+        tx = l.logits.x + 8,
+        tw = l.logits.width - 16;
+      frame.logits.slice(0, l.candidateCount).forEach((candidate, row) => {
+        const y = rt + row * rh,
+          bh = rh - 6;
+        rect("track-" + row, tx, y, tw, bh, c.border, { rx: 4, opacity: 0.45 });
+        rect("prob-" + row, tx, y, tw, bh, candidate.selected ? c.brand : c.violet, {
+          rx: 4,
+          opacity: candidate.selected ? 0.92 : 0.45,
+          "data-probability": candidate.probability,
+          "data-selected": String(candidate.selected),
+          style: `transform:scaleX(${Math.max(0.02, candidate.probability)});transform-origin:${tx}px 0;transition:transform 120ms linear,opacity 120ms linear`,
+        });
+        text(
+          "candidate-" + row,
+          tx + 8,
+          y + bh / 2 + 4,
+          tokenLabel(candidate.text, l.maxCandidateChars),
+          candidate.selected ? c.fg : c.muted,
+          l.labelSize,
+          "start",
+        );
+        text(
+          "percent-" + row,
+          tx + tw - 8,
+          y + bh / 2 + 4,
+          `${(candidate.probability * 100).toFixed(0)}%`,
+          candidate.selected ? c.fg : c.muted,
+          l.labelSize,
+          "end",
+        );
+      });
+      if (frame.logits.length) {
+        rect("winner", tx - 3, rt - 3, tw + 6, rh, "none", {
+          rx: 6,
+          stroke: c.brand,
+          "stroke-width": 1.5,
+          opacity: 0.9,
+        });
+        text("argmax", tx - 6, rt + rh / 2 + 4, "argmax", c.strong, l.labelSize - 1, "end");
+        line("sample-line", cx(l.logits), rt + rh, cx(l.logits), l.laneY, c.blue, {
+          "stroke-width": 1.5,
+          "stroke-dasharray": "3 5",
+          opacity: active("sample") ? 1 : 0.5,
+          style: "animation:fp-flow .7s linear infinite",
+        });
+      }
+      frame.emittedTokens.slice(-l.trailLength).forEach((token) =>
+        text(
+          "emitted-" + token.index,
+          cx(l.logits) + ((token.index % 3) - 1) * 18,
+          rt + rh * l.candidateCount + 16,
+          tokenLabel(token.text, l.maxTokenChars),
+          c.strong,
+          l.tokenSize,
+          "middle",
+          {
+            class: "fp-falling",
+            style: `--fp-distance:${l.laneY - (rt + rh * l.candidateCount + 16)}px;animation:fp-emit 200ms linear forwards`,
+          },
+        ),
+      );
+      const end = cx(l.context),
+        start = cx(l.logits);
+      add("path", "loop", {
+        d: `M ${start} ${l.laneY} H ${end + 24} Q ${end} ${l.laneY} ${end} ${l.laneY - 24} V ${panelBottom(l) + 12}`,
+        fill: "none",
+        stroke: c.blue,
+        "stroke-width": 1.5,
+        "stroke-dasharray": "4 6",
+        "marker-end": `url(#${markerId})`,
+        opacity: frame.emittedTokens.length ? 0.95 : 0.3,
+        style: "animation:fp-flow .9s linear infinite",
+      });
+      text(
+        "loop-label",
+        (start + end) / 2,
+        l.laneY - 10,
+        l.verbose ? "autoregressive · the sampled token becomes the next input" : "autoregressive",
+      );
+      line("detokenize", start, l.laneY, start, l.height - 26, c.brand, {
+        "stroke-width": 1.5,
+        "marker-end": `url(#${markerId})`,
+        opacity: frame.emittedTokens.length ? 1 : 0.3,
+      });
+      text("detokenize-label", start, l.height - 8, "detokenize", c.strong);
+      svg
+        .select(".fp-scene")
+        .selectAll(".fp-mark")
+        .data(items, (d) => d.key)
+        .join(
+          (enter) =>
+            enter
+              .append((d) => document.createElementNS("http://www.w3.org/2000/svg", d.tag))
+              .attr("class", "fp-mark"),
+          (update) => update,
+          (exit) => exit.remove(),
+        )
+        .each(function (d) {
+          for (const name of this._fpAttrs ?? [])
+            if (!(name in d.attrs)) this.removeAttribute(name);
+          this._fpAttrs = Object.keys(d.attrs);
+          for (const [name, value] of Object.entries(d.attrs))
+            this.setAttribute(name, String(value));
+          // Upstream figure styles set text fills, so source colors are applied explicitly.
+          if (d.attrs.fill !== undefined) this.style.fill = d.attrs.fill;
+          if (d.attrs.stroke !== undefined) this.style.stroke = d.attrs.stroke;
+          if (d.tag === "text") this.textContent = d.text;
+          if (d.tooltip) this.dataset.tooltip = d.tooltip;
+          else delete this.dataset.tooltip;
+          this.classList.add("fp-mark");
+        })
+        .order();
+    }
+
+    async function mount(container) {
+      if (container.dataset.mounted) return;
+      container.dataset.mounted = "loading";
+      try {
+        const response = await fetch("/data/forward-pass/tokens.json");
+        if (!response.ok) throw new Error("Token data could not be loaded");
+        const data = await response.json();
+        for (const key of ["prompt", "output"])
+          if (data[key + "Tokenization"].tokens.map((t) => t.text).join("") !== data[key])
+            throw new Error("Token data is not lossless");
+        const input = data.promptTokenization.tokens.map((t, index) => ({ ...t, index })),
+          output = data.outputTokenization.tokens.map((t, index) => ({ ...t, index }));
+        const frames = buildForwardPassFrames(input, output),
+          last = frames.length - 1;
+        const motion = matchMedia("(prefers-reduced-motion: reduce)");
+        const config = JSON.parse(container.closest("[data-config]")?.dataset.config || "{}");
+        const autoplay = config.autoplay !== false && !motion.matches;
+        let position = autoplay ? 0 : last,
+          playing = autoplay,
+          view = "text",
+          highlight = true,
+          timer = null,
+          inView = false,
+          printState = null;
+        const instance = "fp-" + crypto.randomUUID(),
+          markerId = instance + "-arrow";
+        container.style.position = "relative";
+        container.innerHTML = `<div class="fp-eyebrow"><a href="https://huggingface.co/openai-community/gpt2" target="_blank" rel="noopener noreferrer">GPT-2 · 124M</a> · GREEDY DECODING</div>
+        <h2 class="fp-heading">Who is <span>Cristian</span>?</h2>
+        <div class="fp-card">
+          <div class="fp-prompt-wrap"><div class="fp-prompt"><div class="fp-between"><span class="fp-kicker">prompt</span><fieldset class="fp-view"><legend class="fp-sr">Prompt token view</legend><label><input class="fp-radio" type="radio" name="${instance}-view" value="text" checked>text</label><label><input class="fp-radio" type="radio" name="${instance}-view" value="ids">ids</label></fieldset></div><span class="fp-prompt-tokens" aria-hidden="true"></span><p class="fp-counts"></p><p class="fp-sr">Who is Cristian?</p></div></div>
+          <div class="fp-strip fp-between" aria-hidden="true"><span class="fp-status"><span class="fp-dot"></span><span class="fp-phase"></span></span><span class="fp-cache"></span></div>
+          <div class="fp-diagram"><svg role="img" aria-label="GPT-2 forward pass: context embeddings, layer norms, four illustrative attention heads, residual connections, GELU MLP and next-token candidates."><defs><marker id="${markerId}" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--fp-brand)"></path></marker></defs><g class="fp-scene"></g></svg></div>
+          <div class="fp-controls"><div class="fp-buttons"><button type="button" data-action="play">Pause</button><button type="button" data-action="previous" aria-label="Previous frame">◀ Step</button><button type="button" data-action="next" aria-label="Next frame">Step ▶</button><button type="button" data-action="skip">Skip to end</button><button type="button" data-action="restart">Restart</button><span class="fp-position"></span></div><label class="fp-scrub"><span class="fp-sr">Scrub the forward pass, frame by frame</span><input type="range" min="0" max="${last}" value="${position}"></label><p class="fp-caption" aria-live="polite"></p></div>
+          <div class="fp-output"><div class="fp-output-head fp-between"><span>output</span><span class="fp-output-counts"></span></div><div class="fp-bio"><span class="fp-bio-sizer" aria-hidden="true"></span><span class="fp-bio-tokens" aria-hidden="true"></span></div><div class="fp-output-footer"><button type="button" class="fp-highlight" aria-label="Highlight output tokens" aria-pressed="true">highlight</button></div><p class="fp-accessible-bio fp-sr"></p></div>
+        </div>
+        <div class="fp-legend"><strong>Legend</strong><span><i style="background:var(--fp-blue)"></i>Embeddings / residual stream</span><span><i style="background:var(--fp-amber)"></i>Attention heads</span><span><i style="background:var(--fp-violet)"></i>MLP activations</span></div>
+        <p class="fp-note">Scripted illustration from Latent Space, not a live model run. Token IDs are a captured GPT-2 tokenization of the fixed prompt and biography; attention, activations and candidate scores are illustrative and normalized over a five-token shortlist. Four of twelve heads and a trailing context window are drawn.</p><div class="fp-tooltip" role="tooltip" hidden></div>`;
+        const $ = (selector) => container.querySelector(selector),
+          svg = window.d3.select($("svg"));
+        $(".fp-bio-sizer").textContent = data.output;
+        $(".fp-accessible-bio").textContent = data.output;
+        $(".fp-counts").textContent =
+          `${data.promptTokenization.token_count} tokens · ${data.promptTokenization.word_count} words · ${data.promptTokenization.char_count} chars`;
+        function tokens(target, list, fresh = 0) {
+          const groups = groupTokensByGrapheme(list),
+            fragment = document.createDocumentFragment();
+          groups.forEach((group, i) => {
+            const span = document.createElement("span");
+            span.className = "fp-token" + (i >= groups.length - fresh ? " fp-fresh" : "");
+            span.style.setProperty("--chip", tokenColors[i % 6]);
+            span.style.setProperty(
+              "--alpha",
+              i % 2 ? "var(--fp-token-dark)" : "var(--fp-token-light)",
+            );
+            span.textContent =
+              view === "ids" ? group.tokens.map((t) => t.id).join(" ") : group.text;
+            if (view === "text" && group.tokens.length > 1) {
+              const small = document.createElement("small");
+              small.textContent = "×" + group.tokens.length;
+              span.append(small);
+            }
+            fragment.append(span);
+          });
+          if (target === $(".fp-bio-tokens") && playing && position < last) {
+            const cursor = document.createElement("span");
+            cursor.className = "fp-cursor";
+            cursor.textContent = "▍";
+            fragment.append(cursor);
+          }
+          target.replaceChildren(fragment);
+          if (view === "ids") target.scrollTop = target.scrollHeight;
+        }
+        function render() {
+          const frame = frames[position],
+            l = container.clientWidth < 768 ? COMPACT : FULL;
+          container.dataset.playing = String(playing && position < last);
+          container.dataset.phase = frame.phase;
+          container.dataset.frame = position;
+          container.dataset.view = view;
+          container.dataset.highlight = String(highlight);
+          $(".fp-phase").textContent =
+            frame.phase + (frame.activeStage ? " · " + frame.activeStage : "");
+          $(".fp-cache").textContent =
+            `kv cache ${frame.kvCacheLength}/1024` + (l.verbose ? " ctx · 12 blocks" : "");
+          $(".fp-position").textContent =
+            `frame ${position} / ${last} · phase ${frame.phase} · step ${frame.step}`;
+          $(".fp-caption").textContent = `${frame.phase}: ${captions[frame.phase]}`;
+          $('[data-action="play"]').textContent = playing && position < last ? "Pause" : "Play";
+          $('[data-action="previous"]').disabled = position === 0;
+          $('[data-action="next"]').disabled = position === last;
+          $('[data-action="skip"]').disabled = position === last;
+          $(".fp-scrub input").value = position;
+          const emitted = frame.emittedTokens.map((t) => t.text).join("");
+          $(".fp-output-counts").textContent = frame.emittedTokens.length
+            ? `${frame.emittedTokens.length} tokens · ${emitted.split(/\s+/).filter(Boolean).length} words · ${[...emitted].length} chars`
+            : "";
+          draw(svg, frame, l, markerId);
+          tokens($(".fp-prompt-tokens"), input);
+          tokens($(".fp-bio-tokens"), frame.emittedTokens, 2);
+        }
+        function schedule() {
+          clearTimeout(timer);
+          if (playing && position < last && inView && !document.hidden)
+            timer = setTimeout(() => {
+              position++;
+              if (position === last) playing = false;
+              render();
+              schedule();
+            }, frameDelayMs(frames[position]));
+        }
+        function seek(value) {
+          playing = false;
+          position = Math.max(0, Math.min(last, Math.round(value)));
+          render();
+          schedule();
+        }
+        $(".fp-scrub input").addEventListener("input", (e) => seek(Number(e.target.value)));
+        $(".fp-buttons").addEventListener("click", (e) => {
+          const action = e.target.closest("button")?.dataset.action;
+          if (!action) return;
+          if (action === "previous") return seek(position - 1);
+          if (action === "next") return seek(position + 1);
+          if (action === "skip") return seek(last);
+          if (action === "restart") {
+            position = 0;
+            playing = !motion.matches;
+          }
+          if (action === "play") {
+            if (position === last) position = 0;
+            playing = !playing;
+          }
+          render();
+          schedule();
+        });
+        $(".fp-view").addEventListener("change", (e) => {
+          view = e.target.value;
+          render();
+        });
+        $(".fp-highlight").addEventListener("click", () => {
+          highlight = !highlight;
+          $(".fp-highlight").setAttribute("aria-pressed", String(highlight));
+          render();
+        });
+        const tooltip = $(".fp-tooltip");
+        svg
+          .on("pointermove", (e) => {
+            const target = e.target.closest("[data-tooltip]");
+            if (!target) {
+              tooltip.hidden = true;
+              return;
+            }
+            tooltip.textContent = target.dataset.tooltip;
+            tooltip.hidden = false;
+            const bounds = container.getBoundingClientRect();
+            tooltip.style.left =
+              Math.max(0, Math.min(container.clientWidth - 280, e.clientX - bounds.left + 12)) +
+              "px";
+            tooltip.style.top = e.clientY - bounds.top + 16 + "px";
+          })
+          .on("pointerleave", () => {
+            tooltip.hidden = true;
+          });
+        const resize = new ResizeObserver(render);
+        resize.observe(container);
+        const visibility = new IntersectionObserver((entries) => {
+          inView = entries[0].isIntersecting;
+          schedule();
+        });
+        visibility.observe(container);
+        const onVisibility = () => schedule();
+        document.addEventListener("visibilitychange", onVisibility);
+        const onMotion = () => {
+          if (motion.matches) seek(last);
+        };
+        motion.addEventListener("change", onMotion);
+        const beforePrint = () => {
+          printState = { position, playing, view, highlight };
+          playing = false;
+          position = last;
+          view = "text";
+          render();
+          schedule();
+        };
+        const afterPrint = () => {
+          if (!printState) return;
+          ({ position, playing, view, highlight } = printState);
+          printState = null;
+          render();
+          schedule();
+        };
+        window.addEventListener("beforeprint", beforePrint);
+        window.addEventListener("afterprint", afterPrint);
+        window.addEventListener(
+          "pagehide",
+          () => {
+            clearTimeout(timer);
+            resize.disconnect();
+            visibility.disconnect();
+            document.removeEventListener("visibilitychange", onVisibility);
+            motion.removeEventListener("change", onMotion);
+            window.removeEventListener("beforeprint", beforePrint);
+            window.removeEventListener("afterprint", afterPrint);
+          },
+          { once: true },
+        );
+        container.dataset.mounted = "true";
+        render();
+        schedule();
+      } catch (error) {
+        container.dataset.mounted = "error";
+        const message = document.createElement("p");
+        message.setAttribute("role", "alert");
+        message.textContent = "The forward-pass illustration could not load. " + error.message;
+        container.append(message);
+      }
+    }
+    const start = () => document.querySelectorAll(".d3-forward-pass").forEach(mount);
+    if (window.d3?.select) start();
+    else {
+      let loader = document.getElementById("d3-cdn-script");
+      if (!loader) {
+        loader = document.createElement("script");
+        loader.id = "d3-cdn-script";
+        loader.src = "https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js";
+        document.head.append(loader);
+      }
+      loader.addEventListener(
+        "load",
+        () => {
+          if (window.d3?.select) start();
+        },
+        { once: true },
+      );
+    }
+  })();
+</script>

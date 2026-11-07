@@ -1,0 +1,27 @@
+{
+  "routing": {
+    "src": "d3-routing.html",
+    "title": "A token chooses its experts",
+    "description": "Illustrative logits [2.2, 1.3, 0.6, 1.8]. Softmax, top-k selection and renormalization; not experimental measurements.",
+    "lang": "en"
+  },
+  "matrix": {
+    "src": "d3-matrix.html",
+    "title": "Matrix visualization",
+    "description": "Illustrative upstream demonstration by Thibaud Frere, research-article-template (CC BY 4.0).",
+    "lang": "en"
+  },
+  "function-plotter": {
+    "src": "d3-equation-editor.html",
+    "title": "Explore a mathematical function",
+    "description": "Interactive function plotter by Thibaud Frere, research-article-template (CC BY 4.0).",
+    "lang": "en"
+  },
+  "forward-pass": {
+    "src": "d3-forward-pass.html",
+    "title": "Who is Cristian? \u2014 Latent Space forward pass",
+    "description": "The Latent Space homepage hero: captured GPT-2 tokens and an interactive, scripted forward pass.",
+    "lang": "en",
+    "frameless": true
+  }
+}

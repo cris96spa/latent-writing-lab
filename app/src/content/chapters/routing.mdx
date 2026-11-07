@@ -1,0 +1,38 @@
+import HtmlEmbed from "../../components/HtmlEmbed.astro";
+
+## From a teaching claim to a model
+
+A sparse router can select a subset of experts and assign that subset weights that
+sum to one. This example uses a small illustrative model, not experimental measurements.
+The Hugging Face MoE article provides broader context [@hf-moe].
+
+Given scores $z_i$ and a positive temperature $T$, compute
+
+$$
+p_i = \frac{\exp(z_i/T)}{\sum_j \exp(z_j/T)}.
+$$
+
+Select the $k$ largest scores, giving a set $S$, and renormalize:
+
+$$
+w_i = \begin{cases}p_i / \sum_{j \in S}p_j & i \in S,\\0 & i \notin S.\end{cases}
+$$
+
+## Inspect the routing mechanism
+
+<HtmlEmbed
+  src="d3-routing.html"
+  title="A token chooses its experts"
+  desc="Illustrative logits [2.2, 1.3, 0.6, 1.8]. Softmax, top-k selection, then renormalization. This convention does not describe every MoE architecture."
+/>
+
+For fixed scores, changing a positive temperature preserves their ordering. It changes
+how concentrated the weights are, not which experts rank highest. Change the active
+expert count and temperature to inspect that distinction.
+
+The default publication state shows the normalized mixture with two active experts
+and temperature one. Each inactive expert receives zero weight, and the active
+weights sum to one. Selection marks and numerical labels supplement color.
+
+This same figure is available as a [standalone page](/figures/routing/) for embedding
+in another site. Both views render the same HTML source through the template's component.

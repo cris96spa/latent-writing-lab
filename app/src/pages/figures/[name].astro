@@ -1,0 +1,50 @@
+---
+import HtmlEmbed from "../../components/HtmlEmbed.astro";
+import ThemeToggle from "../../components/ThemeToggle.astro";
+import figures from "../../content/figures.json";
+import "../../styles/global.css";
+
+export function getStaticPaths() {
+  return Object.entries(figures).map(([name, figure]) => ({
+    params: { name },
+    props: { figure },
+  }));
+}
+
+const { figure } = Astro.props;
+---
+
+<!doctype html>
+<html lang={figure.lang} data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{figure.title}</title>
+    <meta name="description" content={figure.description} />
+    <script type="module" src="/scripts/color-palettes.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  </head>
+  <body>
+    <ThemeToggle />
+    <main>
+      <HtmlEmbed
+        src={figure.src}
+        title={"frameless" in figure && figure.frameless ? undefined : figure.title}
+        desc={"frameless" in figure && figure.frameless ? undefined : figure.description}
+        frameless={"frameless" in figure && figure.frameless}
+      />
+    </main>
+  </body>
+</html>
+
+<style>
+  /* Standalone pages have no mobile article menu to carry the theme control. */
+  body :global(#theme-toggle) {
+    display: flex;
+  }
+  main {
+    max-width: 1100px;
+    margin: 4rem auto 1rem;
+    padding: 1rem;
+  }
+</style>
