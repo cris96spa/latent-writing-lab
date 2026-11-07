@@ -148,24 +148,19 @@ ids `docs-showcase`, `docs-rules`, `docs-plotter` and `docs-routing`.
 
 </Accordion>
 
-<Accordion title="Publish this documentation on GitHub Pages">
+<Accordion title="Where this documentation is published">
 
-In **Settings → Pages**, set **Source** to **GitHub Actions**. Every push to the default branch
-that passes validation then builds and deploys these pages to
-`https://OWNER.github.io/REPOSITORY/`. Until the source is set, CI leaves a notice and publishes
-nothing, so projects created from the template never publish documentation by accident.
-
-GitHub Pages serves a repository's site under `/REPOSITORY/`, so the build takes Astro's
-`--base` option, and `tools/docs.mjs` prefixes the root-relative links the template writes:
+The starter is itself a GitHub template, and CI uses that to decide what GitHub Pages shows: the
+starter publishes this documentation, while every project created from it publishes its article,
+as described in [Put it online](/publishing/#put-it-online). Both follow the same opt-in and the
+same subpath handling. To build the documentation as Pages serves it:
 
 ```sh
-npm run docs:build -- --base /latent-writing-lab/
+npm run pages:build -- docs /latent-writing-lab/
 ```
 
-The prefixing covers `src` and `href` attributes, not addresses a figure's script builds at
-run time, so a figure on a page other than the overview loads data from a relative path such as
-`../data/file.csv`. The build does not set Astro's `site`, because the sitemap integration fails
-under Astro 4 when it is set, so the published documentation has no sitemap.
+A figure on a documentation page other than the overview loads data from a relative path such as
+`../data/file.csv`, which works at the site root and under a subpath alike.
 
 </Accordion>
 

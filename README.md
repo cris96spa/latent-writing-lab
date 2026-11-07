@@ -5,7 +5,7 @@
 ### Research articles your readers can play with.
 
 Write in Markdown. Add figures readers can operate.<br/>
-Ship a website, a PDF and figures that embed anywhere.
+Open a pull request to check it, merge to publish it.
 
 [![Checks](https://img.shields.io/github/actions/workflow/status/cris96spa/latent-writing-lab/check.yml?branch=development&style=flat-square&label=checks)](https://github.com/cris96spa/latent-writing-lab/actions/workflows/check.yml)
 [![Docs](https://img.shields.io/badge/docs-read%20online-E07A47?style=flat-square)](https://cris96spa.github.io/latent-writing-lab/)
@@ -40,10 +40,19 @@ like books and behave like notebooks: prose, equations and citations next to fig
 operate. All three run on Thibaud Frere's
 [research-article-template](https://github.com/tfrere/research-article-template).
 
-**Latent Writing Lab is the starter kit for writing your own.** Create a repository from it,
-write, and publish. Everything an article needs is ready: live documentation, figures to start
-from, embeddable figure pages, PDF export, and browser tests that catch a broken figure before
-your readers do.
+**Latent Writing Lab is that engine with a publishing pipeline already wired in.** Create a
+repository from the template and write: every pull request builds your article and tests its
+figures, and every merge goes live on GitHub Pages.
+
+|                                                   | research-article-template | Latent Writing Lab |
+| ------------------------------------------------- | :-----------------------: | :----------------: |
+| Interactive articles with math, citations and PDF |            ✅             |         ✅         |
+| A broken figure blocks the release                |             —             |         ✅         |
+| Live on GitHub Pages with every merge             |             —             |         ✅         |
+| Share any figure on another website               |             —             |         ✅         |
+
+Publishing one article on a Hugging Face Space? The template's `npx create-research-article`
+is the faster start.
 
 ## Features
 
@@ -77,8 +86,8 @@ One build gives a static site in light and dark, a PDF and LaTeX, with figures c
 </td>
 <td width="33%" valign="top">
 
-**✅ Tested like code**<br/>
-Browser tests operate your figures in both themes and at phone width, on every push.
+**🚀 Ships like software**<br/>
+Pull requests are built and tested, merges go live. A broken figure never reaches readers.
 
 </td>
 <td width="33%" valign="top">
@@ -130,8 +139,9 @@ Three rules keep it predictable:
 3. Replace the demo with your first chapter, as the docs'
    [quick start](https://cris96spa.github.io/latent-writing-lab/#quick-start) shows in two
    files.
-4. Run `npm run check` and `npm run test:e2e`, then deploy `app/dist` to any static host, a
-   Hugging Face Space or the included Docker image.
+4. In **Settings → Pages**, set **Source** to **GitHub Actions**. From then on, every merge that
+   passes the checks is live at `https://OWNER.github.io/REPOSITORY/`. Any static host, a
+   Hugging Face Space or the included Docker image work too.
 
 <details>
 <summary><b>Where things live</b></summary>
