@@ -31,8 +31,10 @@ Use the upstream skills and read their referenced guidance:
 - `.ai/skills/create-html-embed/SKILL.md` for interactive figures.
 - `.ai/skills/article-frontmatter/SKILL.md` for article metadata.
 - `.ai/skills/deploy-to-hf-spaces/SKILL.md` for explicitly requested deployment.
-- `.ai/skills/write-documentation/SKILL.md` for any prose meant for other readers: the
-  README, the documentation pages, figure captions, pull requests and commit messages.
+- `.ai/skills/write-article/SKILL.md` for the article itself: chapters, equations, figure
+  captions, citations and the bibliography.
+- `.ai/skills/write-documentation/SKILL.md` for any other prose meant for other readers: the
+  README, the documentation pages, pull requests and commit messages.
 
 ## Figures and content
 

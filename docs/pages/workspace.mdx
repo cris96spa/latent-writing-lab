@@ -30,6 +30,31 @@ it on their own. Note the starter commit a project began from, and bring later f
 reviewed patches. Never copy the starter's `app/src/content` over a project's: it replaces the
 article with the demonstration.
 
+## Remove the demo
+
+A new project starts with the template's demonstration article: eleven chapters, about twenty
+figures and 20 MB of images, audio and data. They show every component at work, and none of
+them belongs in your article. `make demo-remove` takes them out in one step:
+
+```sh
+make demo-remove
+```
+
+```text
+Removed 45 demo paths and 12 references.
+```
+
+The command deletes exactly the paths listed in `tools/demo.json` and nothing else. It keeps
+the figures, images, data and references this documentation uses, so `make doc` keeps working,
+and it leaves `figures.json` alone. It then writes a one-chapter article from `tools/starter/`
+and a test for it in `e2e/article.spec.ts`. The project builds and every test passes
+afterwards; CI proves it on every push to the starter, by running the command on a fresh copy.
+
+The command refuses to run once `article.mdx` stops importing the demonstration, because by then
+it holds your own article, and while `app/src/content` or `e2e` has uncommitted changes, so the
+removal is always a reviewable Git change. Undo it before committing with
+`git restore . && git clean -fd app/src/content/chapters`.
+
 ## What lives where
 
 | Path                               | Holds                                              | Owner    |
@@ -86,9 +111,12 @@ tasks:
 | `create-html-embed`   | Building interactive figures the engine can mount and theme   |
 | `article-frontmatter` | Every frontmatter field and its default                       |
 | `deploy-to-hf-spaces` | Publishing on a Hugging Face Space, when explicitly requested |
-| `write-documentation` | Writing prose, captions, docs, commits and pull requests      |
+| `write-article`       | Writing the article: voice, figures, math and citations       |
+| `write-documentation` | Writing docs, the README, commits and pull requests           |
 
-The first three come from upstream; `write-documentation` belongs to this kit.
+The first three come from upstream. `write-documentation` belongs to this kit, and `write-article`
+adapts the [FinePhrase writing guidelines](https://huggingface.co/spaces/HuggingFaceFW/finephrase/blob/main/AGENTS.md)
+to this engine.
 
 ## Commands
 
@@ -108,6 +136,7 @@ Run every command from the repository root.
 | `npm run format`       | Formats the files `check` verifies                        |                |
 | `npm run export:pdf`   | PDF of the built article                                  |                |
 | `npm run readme:media` | Records the README animations                             |                |
+| `make demo-remove`     | Replaces the demonstration with a one-chapter starter     |                |
 
 Without Make, `npm run docs:dev`, `npm run docs:build` and `npm run docs:check` do the same
 work, and `make doc DOC_PORT=8032` picks another port.
@@ -141,6 +170,11 @@ make doc-check
 npm run build
 npm run test:e2e
 ```
+
+A documentation page that starts using one of the demonstration's figures, images or data
+files must take it off the list in `tools/demo.json`; otherwise CI's `make demo-remove` job
+fails, because the documentation build loses the file. The quick start's two files are copies of
+`tools/starter/`, and `npm run docs:check` fails when they differ.
 
 `e2e/docs.spec.ts` visits every page in `pages.json` and operates the overview's figures, so
 change it in the same commit as the page list, the rules figure's button labels, or the figure

@@ -50,12 +50,12 @@ Verified 98 upstream files and 3 standalone figures. Astro validates and compile
 [build] Complete!
 ```
 
-The browser tests live in `e2e/`. `article.spec.ts` covers the article and its figure pages, and
-`docs.spec.ts` covers this documentation. They switch themes, shrink the page to phone width,
-operate controls and read the results, and they serve D3 locally, so the network never decides
-a result. When you replace the demonstration with your own article, the first test fails, because
-it expects the demonstration's title. Replace it with a test of your own article, as shown in
-[Test what the figure claims](/interactive-figures/#test-what-the-figure-claims).
+The browser tests live in `e2e/`: `article.spec.ts` covers the article, `figures.spec.ts` the
+standalone figure pages, and `docs.spec.ts` this documentation. They switch themes, shrink the
+page to phone width, operate controls and read the results, and they serve D3 locally, so the
+network never decides a result. `make demo-remove` replaces the demonstration's test with one
+for the starter article; as your article grows, extend it with tests of what its figures must
+do, as shown in [Test what the figure claims](/interactive-figures/#test-what-the-figure-claims).
 
 No check can tell whether a sentence is true or a figure makes its point. That review happens in
 a pull request, where CI repeats every check on Node 22 and 24 and keeps the builds and test

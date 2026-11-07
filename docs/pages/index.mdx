@@ -115,8 +115,17 @@ template produces them, and the article builds normally.
 
 </Accordion>
 
-Your article is defined by one file, `app/src/content/article.mdx`. Replace its contents with a
-title and one chapter, and the demonstration disappears:
+Your article is defined by one file, `app/src/content/article.mdx`, which starts out importing
+the template's demonstration. Clear it out in one step:
+
+```sh
+make demo-remove
+```
+
+The command deletes the demonstration's chapters, figures and data, keeps everything these docs
+use, and writes a one-chapter article with a browser test. It leaves the change uncommitted, so
+`git status` shows exactly what went. The article it writes is these two files, which you can
+also create by hand. `article.mdx` names the title and the chapters:
 
 ```mdx
 ---
@@ -131,7 +140,7 @@ import Intro from "./chapters/intro.mdx";
 <Intro />
 ```
 
-Then create `app/src/content/chapters/intro.mdx`:
+`app/src/content/chapters/intro.mdx` holds the chapter:
 
 ```mdx
 import HtmlEmbed from "../../components/HtmlEmbed.astro";
@@ -151,7 +160,7 @@ $$
 />
 ```
 
-Save both files: the preview shows your title, the equations and a live function plotter. The
+Either way, the preview shows your title, the equations and a live function plotter. The
 [Writing](/writing/) page covers everything a chapter can hold.
 
 ## How the pieces fit
