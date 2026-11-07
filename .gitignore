@@ -3,6 +3,7 @@ node_modules/
 .cache/
 app/.astro/
 app/dist/
+docs-dist/
 *.tsbuildinfo
 
 # Generated publication and importer output

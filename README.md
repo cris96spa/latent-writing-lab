@@ -12,110 +12,99 @@ tags:
 
 # Latent Writing Lab
 
-A writing workspace built on Thibaud Frere's
-[research-article-template](https://github.com/tfrere/research-article-template).
-Astro, MDX, BibTeX, native HTML/D3 embeds, shared themes, and the upstream export
-tools provide the publishing foundation. Figures have one HTML source that can
-appear in an article or a standalone page for another website.
+Latent Writing Lab is a workspace for writing a research article or technical explainer in
+Markdown, with equations, citations and interactive figures, and publishing it as a static
+website or a PDF. It runs on Thibaud Frere's
+[research-article-template](https://github.com/tfrere/research-article-template), which
+supplies the layout, theming, citations and exporters, and it keeps that engine unmodified so
+upstream updates stay reviewable. On top of the engine, the workspace adds standalone figure
+pages that other websites can embed, an interactive guide built with the same engine, and
+checks that run locally and in CI.
 
-## Start writing
+## Quick start
 
-Use one repository per independently published article project. See the
-[project workflow](docs/workflow.md) for creating a project from the template,
-working on drafts, publishing, and keeping reused figures in one owning project.
-
-Start with the [first-article walkthrough](docs/first-article.md). The page at `/`
-is the complete upstream template demonstration, including its chapters, component
-examples, charts, images and datasets. General conventions are in [Authoring](docs/authoring.md),
-and figure reuse is in [Integration](docs/integration.md).
-
-Use Node 22.12+ (Node 22 LTS recommended) and npm:
+You need Git, Node.js 22.12 or later, and npm; CI tests Node 22 and 24. Run every command
+from the repository root. Install the dependencies and start the article preview:
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open <http://127.0.0.1:4321>. Edit `app/src/content/article.mdx` for metadata and
-chapter imports, and `app/src/content/chapters/` for prose. The native template
-publishes one article per project. A chapter is part of that article; it is not a
-separate routed post. All imported content is included in production builds.
+Open <http://127.0.0.1:4321/>. You should see the template's demonstration article, which
+shows every component the engine provides. If port 4321 is taken, Astro prints the port it
+chose instead. The page reloads whenever you save a file.
 
-| Path                                                  | Responsibility                                    |
-| ----------------------------------------------------- | ------------------------------------------------- |
-| `app/src/content/article.mdx`                         | Article metadata and chapter composition          |
-| `app/src/content/chapters/`                           | MDX prose, math and component imports             |
-| `app/src/content/bibliography.bib`                    | Native BibTeX references                          |
-| `app/src/content/embeds/`                             | Visualization source of truth                     |
-| `app/src/content/assets/data/`                        | Datasets and source notes, served at `/data/`     |
-| `app/src/content/figures.json`                        | Optional standalone figure pages                  |
-| `app/src/components/`, `app/plugins/`, `app/scripts/` | Upstream rendering and publication engine         |
-| `.ai/skills/`                                         | Upstream authoring instructions for coding agents |
-| `app/src/pages/figures/`                              | Small standalone adapter using native `HtmlEmbed` |
-| `app/dist/`                                           | Generated static site and publication artifacts   |
+The interactive guide shows how to replace the demonstration with your own article. Start it
+in a second terminal:
 
-## Write a visualization
-
-Use the native embed component in a chapter:
-
-```mdx
-import HtmlEmbed from "../../components/HtmlEmbed.astro";
-
-<HtmlEmbed
-  src="d3-routing.html"
-  title="A token chooses its experts"
-  desc="Illustrative scores; not experimental measurements."
-/>
+```sh
+make doc
 ```
 
-Each embed contains scoped HTML/CSS and JavaScript. D3, SVG, Canvas and other native
-browser techniques can support custom diagrams and interactions. The template supplies
-the surrounding presentation and theme; there is no separate React figure library.
-Read [authoring](docs/authoring.md) and the upstream
-[embed skill](.ai/skills/create-html-embed/SKILL.md).
+Open <http://127.0.0.1:8031/>. The guide walks through creating a project, writing a first
+article, adding figures and data, and publishing, with live examples beside the instructions.
+Without Make, run `npm run docs:dev`.
 
-## Reuse on another website
+## Where things live
 
-Add an entry to `app/src/content/figures.json` to generate `/figures/<name>/`.
-The article and standalone page use the same embed file and upstream component.
-For example, publish `app/dist` and embed `/figures/routing/` in a React, Astro,
-or ordinary HTML site. See [integration](docs/integration.md) for the iframe contract.
+You write in `app/src/content/`. The rest of `app/` is the template's engine, which the
+workspace uses as it is.
 
-## Verify and publish artifacts
+| Path                                                  | Contents                                                   |
+| ----------------------------------------------------- | ---------------------------------------------------------- |
+| `app/src/content/article.mdx`                         | Article metadata and the list of chapters, in order        |
+| `app/src/content/chapters/`                           | Chapters in MDX: prose, math and component imports         |
+| `app/src/content/bibliography.bib`                    | BibTeX references cited from chapters                      |
+| `app/src/content/embeds/`                             | Figures, one HTML file each                                |
+| `app/src/content/assets/data/`                        | Datasets and their source notes, served at `/data/`        |
+| `app/src/content/figures.json`                        | Figures published as standalone pages                      |
+| `app/src/components/`, `app/plugins/`, `app/scripts/` | The template's rendering, citation and export engine       |
+| `app/src/pages/figures/`                              | The standalone figure page, built on the template's embeds |
+| `docs/`                                               | The interactive guide and the maintainer documentation     |
+| `tools/`, `e2e/`                                      | Project checks and browser tests                           |
+| `.ai/skills/`                                         | Instructions for coding agents                             |
+| `app/dist/`                                           | The generated website and exports; never edit it           |
+
+## Documentation
+
+| To                                                       | Read                                                                    |
+| -------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Write a first article, add figures and publish           | The interactive guide (`make doc`), with its source in `docs/chapters/` |
+| Follow the conventions for chapters, sources and figures | [Authoring conventions](docs/authoring.md)                              |
+| Organize repositories, drafts and releases               | [Project and publishing workflow](docs/workflow.md)                     |
+| Embed a figure in another website                        | [Reuse a figure on another website](docs/integration.md)                |
+| Understand how the workspace fits together               | [Architecture](docs/architecture.md)                                    |
+| Know what each check covers                              | [Verification](docs/verification.md)                                    |
+| Update the template or check its provenance              | [Upstream and provenance](docs/baseline.md)                             |
+| Edit the guide or these pages                            | [Documentation](docs/documentation.md)                                  |
+| See why figures are native HTML embeds                   | [Research note](docs/research.md)                                       |
+
+Coding agents follow [AGENTS.md](AGENTS.md), which `CLAUDE.md` links to, and the skills in
+[.ai/skills](.ai/skills/), including the [writing skill](.ai/skills/write-documentation/SKILL.md)
+for documentation.
+
+## Check a change
+
+The browser tests run against production builds of both the article and the guide, so build
+both before testing. Install Chromium once with `npx playwright install chromium`, then run:
 
 ```sh
 npm run check
-npm run docs:check
-npx playwright install chromium
+make doc-check
 npm run test:e2e
-npm run preview
 ```
 
-`npm run build` produces the static site in `app/dist`. The root commands delegate to
-the upstream tools:
+`npm run check` confirms that the template files match their pinned versions, that project
+files are formatted, and that the article builds. `make doc-check` checks documentation links
+and builds the guide. `npm run test:e2e` tests both sites in Chromium. CI runs the same steps
+on Node 22 and 24 and keeps the builds as artifacts; it never deploys. The
+[verification page](docs/verification.md) lists what each check proves, and the guide's
+**Review and publish** section covers exports and hosting.
 
-```sh
-npm run export:pdf -- --theme=light --wait=full
-npm run export:latex
-npm run export:images
-```
+## License
 
-PDF export requires Playwright Chromium. LaTeX export requires Pandoc; check the upstream
-script help for additional conversion requirements. Build before exporting after edits:
-the PDF script reuses an existing `app/dist`. Inspect exported figures and page breaks.
-Set `showPdf: true` in article metadata only when the matching PDF is included in the
-deployed output. Generated downloads belong in `app/dist`.
-
-The supplied container serves the static build on port 8080. GitHub CI validates,
-builds, tests and uploads artifacts; it does not deploy automatically. Hosting on
-Hugging Face is optional. The article and embeds use upstream CDN dependencies, so
-interactive figures require network access to those dependencies.
-
-## Upstream and local extensions
-
-The exact upstream revision and implementation checksums are in
-`template-provenance.json`. Upstream code and selected demonstration embeds retain
-their CC BY 4.0 license and attribution; see [baseline](docs/baseline.md).
-The local additions are the routing example, standalone figure adapter, verification
-and workspace commands. See [architecture](docs/architecture.md) and
-[verification](docs/verification.md).
+The template's code and demonstration content keep their CC BY 4.0 license, reproduced in
+[LICENSE](LICENSE), and their attribution. `template-provenance.json` pins the template
+revision this workspace uses; [Upstream and provenance](docs/baseline.md) explains what is
+upstream and what is local.

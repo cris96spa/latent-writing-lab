@@ -1,52 +1,77 @@
-# Authoring
+# Authoring conventions
 
-For an end-to-end example, follow [Your first article](first-article.md).
-For repository creation, drafts, publishing and shared figures, see
-[Project and publishing workflow](workflow.md).
-
-The native research article template is the publishing engine. Use its components,
-frontmatter and export scripts directly. The upstream
-[documentation](https://tfrere-research-article-template-site.hf.space/docs) and
-[agent skills](../.ai/skills/create-html-embed/SKILL.md) describe the available capabilities.
+These conventions cover what you write in `app/src/content`: chapters, references, data and
+figures. They exist because the engine compiles all of it into a public site, and because
+figures make claims that readers rely on. For a walkthrough with live examples, run
+`make doc`. The components and frontmatter fields the engine accepts are documented in the
+[upstream documentation](https://tfrere-research-article-template-site.hf.space/docs) and in
+the [frontmatter skill](../.ai/skills/article-frontmatter/SKILL.md).
 
 ## Articles
 
-Put metadata and chapter imports in `app/src/content/article.mdx`. Write chapters
-in `app/src/content/chapters/`. Use native MDX imports, components, Markdown,
-LaTeX math, and citations such as `[@hf-moe]`. References belong in
-`app/src/content/bibliography.bib`.
+An article is defined by `app/src/content/article.mdx`: its frontmatter holds the metadata and
+its body imports the chapters from `app/src/content/chapters/`. Only imported chapters become
+part of the article, and everything imported is published, because the engine has no draft
+flag. Keep an unfinished chapter out of the imports until it is ready to be seen.
 
-The default entry point renders the upstream demo chapters in `chapters/demo/`.
-Use them as reference examples; replace the imports with your own chapters to write.
+The entry point starts out rendering the upstream demonstration chapters in `chapters/demo/`.
+They are a reference for the components. When you start writing, replace their imports with
+your own chapters, and replace the demonstration metadata too: its author, affiliation and
+sample DOI are not yours.
 
-This is one article per project, with `article` and `paper` layouts. The complete
-article is served at `/`. There is no draft flag or automatic translation layer:
-everything imported by the article is built. Keep unfinished chapters unimported.
-MDX is executable repository source; review it as code.
+Write chapters in Markdown, import components where Markdown is not enough, put LaTeX math
+between dollar signs, and cite with keys such as `[@hf-moe]`, which resolve against
+`app/src/content/bibliography.bib`. Start headings at `##`, because the template renders the
+article title as the page's top-level heading. A project builds one article, served at `/`,
+in either the `article` or the `paper` layout.
 
-Do not invent authors, affiliations, sources, DOIs or empirical measurements. Set
-the article's language consistently in prose and labels. The upstream article shell
-uses English; additional shell localization is an explicit extension.
+MDX is executable: an import or an expression in a chapter runs when the site builds. Review
+chapter changes as you would review code.
 
-## Native figures
+## Accuracy and language
 
-Read the upstream [embed skill](../.ai/skills/create-html-embed/SKILL.md) and its
-[full directives](../.ai/skills/create-html-embed/directives.md). Each visualization
-lives in one HTML file under `app/src/content/embeds/`. Use a root element, scoped
-styles, and an IIFE script. Native `HtmlEmbed` handles the wrapper and script mounting.
+Every author, affiliation, source, DOI and measurement in an article must be real and checked.
+When a value is invented to illustrate a mechanism, say so in the figure's caption. Keep prose
+and figure labels in the article's language. The template's own interface, such as its
+buttons and table of contents, is in English, and translating it means extending the engine.
 
-Use theme variables and `window.ColorPalettes`, accessible HTML controls, SVG or
-Canvas graphics, instance-local state, and responsive layout. Data belongs in
-`app/src/content/assets/data/`, exposed by the native `/data/` symlink. `HtmlEmbed`
-accepts `data` and `config` props when a visualization needs configuration.
+## Figures
 
-The routing example separates its pure calculation from the render function. Its
-publication state is top-k two, temperature one, with normalized weights displayed.
-Reset restores that state. Its static HTML summary remains available without JavaScript.
-The matrix, function plotter and decorative banner are attributed upstream examples.
-They illustrate capabilities, not experiments.
+Each figure is one HTML file in `app/src/content/embeds/`, placed in a chapter with the
+template's `HtmlEmbed` component. The [embed skill](../.ai/skills/create-html-embed/SKILL.md)
+and its [directives](../.ai/skills/create-html-embed/directives.md) are the complete rules;
+the essentials follow.
 
-For a new figure, provide this brief:
+An embed is a root element, CSS scoped to that root's class, and a script wrapped in an
+immediately invoked function. `HtmlEmbed` mounts the script, and a page can contain several
+instances of the same figure, so keep state inside the instance and guard against mounting
+twice. Take colors from the template's CSS variables and `window.ColorPalettes`, so the figure
+follows the theme, and recompute colors calculated in JavaScript when the theme changes. Build
+controls from labelled HTML elements, so they work with a keyboard and a screen reader, and
+size the figure from its container so it fits on a phone.
+
+Keep the scientific model apart from the code that draws it. The routing example,
+`d3-routing.html`, computes its weights in one pure function and renders them in another, so
+tests can check that the weights sum to one and that temperature preserves their ranking
+without reading the SVG.
+
+Give every scientific figure a deterministic publication state: the state it opens in, the
+one that PDF and image exports capture, and the one a reset restores. The routing example
+opens with two active experts at temperature one, and a static HTML summary of that state
+keeps the result readable without JavaScript.
+
+Data lives in `app/src/content/assets/data/` and is served at `/data/` through the
+`app/public/data` symbolic link. `HtmlEmbed` passes `data` and `config` props to the embed;
+what they mean depends on the embed's script.
+
+The banner, matrix and function plotter are upstream demonstrations by Thibaud Frere. They
+show what the engine can do and are not experimental evidence.
+
+## Commissioning a figure
+
+When you ask a person or an agent for a new figure, the brief decides the result more than the
+code does. State the claim the figure should make and for whom, the data with its source and
+simplifications, the controls with their ranges and defaults, and the publication state:
 
 ```text
 Read AGENTS.md and the upstream HTML embed skill and directives.
@@ -59,14 +84,17 @@ Keep the model separate from rendering and test its invariants.
 Use one embed source for the article and any standalone figure page.
 ```
 
-Standalone routes are optional. Register their source, title, description and language
-in `app/src/content/figures.json`. New article-only embeds need no registry entry.
-The optional `frameless` property lets a standalone figure supply its own heading
-and card through the native component.
+## Standalone figure pages
 
-## Checks and exports
+Register a figure in `app/src/content/figures.json` only when another website will embed it.
+Each entry needs `src`, `title`, `description` and `lang`, and becomes the page
+`/figures/<name>/`. The optional `frameless: true` lets the figure supply its own heading and
+card. Figures used only in the article need no entry. The embedding contract is described in
+[Reuse a figure on another website](integration.md).
 
-Run `npm run check` and `npm run test:e2e` after figure or integration changes.
-Run `npm run docs:check` for documentation. Build, export PDF, and inspect it when
-publication output changes. Upstream PDF/LaTeX/image exporters own conversion;
-avoid introducing another article renderer or export pipeline.
+## Checks
+
+After changing content or figures, run `npm run check` and `npm run test:e2e`. When the
+published output changes, build, export the PDF and inspect it. [Verification](verification.md)
+says what each check covers. The upstream exporters own the PDF, LaTeX and image conversion,
+so fix an export problem there rather than adding a second export pipeline.

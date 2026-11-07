@@ -1,0 +1,222 @@
+import Accordion from "../../components/Accordion.astro";
+import Note from "../../components/Note.astro";
+
+## Check, build and publish
+
+You check the build, because of the third rule: **readers get the build, not your preview**.
+The preview from `npm run dev` compiles each page on request, from your live source, in your
+browser. Readers instead receive the static site that `npm run build` writes to `app/dist`,
+or a PDF made from it. Publishing is therefore three steps, in this order: check the build,
+export what you need from it, and put it where readers can reach it.
+
+Each check answers a different question, and none of them answers all of them:
+
+- `npm run check` confirms that the template files match their pinned versions, that project
+  files are formatted and that the article builds.
+- `make doc-check` checks the documentation's links and builds this guide, which lives in
+  your project too and has its own tests.
+- `npm run test:e2e` opens the built article and guide in Chromium and operates their figures
+  the way a reader would.
+
+None of them can tell whether a sentence is true or a figure makes its point. That review
+stays with you and your reviewers, in a pull request.
+
+<Accordion title="Check your article, including the first example">
+
+Install the browser for the tests once:
+
+```sh
+npx playwright install chromium
+```
+
+Then format the project, run the checks and the browser tests, and start the production
+preview:
+
+```sh
+npm run format
+npm run check
+make doc-check
+npm run test:e2e
+npm run preview
+```
+
+A passing `npm run check` ends with the provenance check and the build, and the page count
+includes the three registered figure pages:
+
+```text
+Verified 98 upstream files and 3 standalone figures. Astro validates and compiles MDX during build.
+...
+[build] 5 page(s) built in 5.27s
+[build] Complete!
+```
+
+Open **http://127.0.0.1:8080/** for the production preview. It serves `app/dist`, not your
+live source, so rebuild after each edit.
+
+On a fresh copy of the starter, all nine browser tests pass. After the first-article example,
+one of them fails, and the failure says why: the first test in `e2e/article.spec.ts` still
+expects the demonstration's title.
+
+```text
+Error: expect(locator).toContainText(expected) failed
+
+Locator: getByRole('heading', { level: 1 })
+Expected substring: "Bringing paper to life:"
+Received string:    "What changes when frequency doubles?"
+```
+
+Replace that test with one that checks your article:
+
+```ts
+test("my article explains frequency", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "What changes when frequency doubles?",
+  );
+  await expect(page.locator(".katex").first()).toBeVisible();
+  await expect(page.locator(".html-embed__error")).toHaveCount(0);
+  const input = page.getByRole("textbox");
+  await input.fill("sin(2*x)");
+  await expect(page.locator("path.function-curve")).toBeVisible();
+});
+```
+
+Keep the file's imports, its D3 setup and the standalone figure tests. If you remove a figure
+from `figures.json`, remove the tests for its page too. For a figure that models something,
+test the properties that must hold, as the routing tests do: weights that sum to one, values
+that stay in range, or a curve that changes as expected.
+
+GitHub CI runs the same checks on Node 22 and 24 for every push and pull request, and keeps the
+builds as downloadable artifacts for 14 days. It never deploys anything.
+
+</Accordion>
+
+A PDF is the build with the controls removed. The exporter opens the built article in Chromium
+and replaces every figure with a screenshot of its publication state, so the figure states you
+chose in the previous chapter are the ones that reach paper.
+
+<Accordion title="Export a PDF, LaTeX or images">
+
+Build first, so the export reflects your source, and stop any preview running on port 8080,
+because the PDF exporter starts its own:
+
+```sh
+npm run build
+npm run export:pdf -- --filename=article --theme=light --wait=full
+```
+
+For the first-article example, the exporter's output ends like this; the two screenshots are
+the banner and the plotter:
+
+```text
+📸 Screenshotting embeds…
+   2 embed(s) replaced with screenshots
+✅ PDF generated: …/app/dist/article.pdf
+✅ PDF copied to: …/app/public/article.pdf
+```
+
+Open `app/dist/article.pdf` and check the equations, captions and page breaks. Wide charts can
+be clipped, and iframes that show external applications rarely print usefully. The exporter
+also writes the social preview thumbnails.
+
+For LaTeX, install Pandoc and run `npm run export:latex -- --filename=article`, which writes
+`app/dist/article.tex`; its `--pdf` option also needs `pdflatex`. For PNG images of the
+figures, run `npm run preview`, then `npm run export:images` in a second terminal. The images
+are written to `app/screenshots/`.
+
+Git ignores generated files, so a clean build or a container image does not contain a PDF you
+exported locally: make the reviewed export part of what you deploy. The download button of the
+`article` layout links to a filename derived from the title, so use the exporter's default name
+or link to a custom name yourself, then open the public download address to confirm it works.
+The `paper` layout has no download button.
+
+</Accordion>
+
+The last step is a deliberate one. Nothing in the project publishes on its own, so you choose
+the host and push the reviewed build there yourself.
+
+<Note title="Deployment is always a step you take" variant="danger">
+  CI builds and tests every push but never publishes. Pushing to a Hugging Face Space, by contrast,
+  publishes the pushed revision as soon as the Space has built it, so push only commits you have
+  reviewed.
+</Note>
+
+<Accordion title="Choose where the article lives">
+
+On a static host, deploy the complete contents of `app/dist/` at the root of an origin, keeping
+`_astro`, `data`, `scripts` and the figure pages together. The site loads its files through
+root-relative addresses, so it needs an origin of its own; serving it under a subpath means
+adapting the engine's base path. For canonical addresses and a sitemap outside Hugging Face,
+set your site's origin in the Astro configuration.
+
+The supplied Dockerfile builds the article and serves it with nginx on port 8080:
+
+```sh
+docker build -t my-article .
+docker run --rm -p 8080:8080 my-article
+```
+
+To host on Hugging Face, create a **Docker Space**, and keep `sdk: docker`, `app_port: 8080` and
+the `research-article-template` tag in the root README metadata. Then push your reviewed commits
+to the Space with your usual Git authentication, replacing `YOUR-OWNER` and `YOUR-SPACE`:
+
+```sh
+git remote add hf https://huggingface.co/spaces/YOUR-OWNER/YOUR-SPACE
+git push hf HEAD:main
+```
+
+The push starts a build on Hugging Face. Follow its logs, then open the public page, its data
+and its download links. Keep tokens out of remote addresses and source files. The image does
+not generate a PDF during its build.
+
+</Accordion>
+
+Problems show up at a particular stage, and the stage narrows down the cause. Find what you see
+in the table below, organized from writing to deployment.
+
+<Accordion title="When something does not look right">
+
+| Where           | What you see                     | What to try                                                                     |
+| --------------- | -------------------------------- | ------------------------------------------------------------------------------- |
+| Preview         | Your chapter is missing          | Import it and place its tag in `article.mdx`.                                   |
+| Preview         | `Embed not found`                | Match `src` to a file under `embeds/`, including its case.                      |
+| Preview         | An empty chart                   | Check the browser console, CDN access and the `/data/...` response.             |
+| Preview         | A data file returns 404          | Check the filename and the `app/public/data` symbolic link.                     |
+| Preview         | A stale import error             | Restart the development server after changing dependencies.                     |
+| Build           | MDX will not compile             | Check relative imports, unclosed tags, braces and code fences.                  |
+| Build           | A citation does not resolve      | Match its key to a valid BibTeX record.                                         |
+| Check           | A provenance check fails         | Review the named template file; never re-record hashes to silence it.           |
+| Production view | The page shows old text          | Rebuild; `npm run preview` serves the last build.                               |
+| Deployed site   | The PDF download is missing      | Include the matching PDF in the deployed site.                                  |
+| Deployed site   | A figure works locally, not live | Check the browser console: figures load D3 from a CDN, which must be reachable. |
+
+Some limits come from the template itself. Its demonstration references a citations chart,
+`d3-hf-citations.html`, that upstream never supplied, and the live upstream page shows the
+same gap. The demonstration also loads libraries from CDNs and embeds external pages, so not
+every example works offline.
+
+</Accordion>
+
+## The whole path in one list
+
+Each chapter has added one piece. Put together, they make the recipe for every article you
+publish from this starter:
+
+1. Create a repository from the starter with **Use this template**, clone it, and run `npm ci`
+   and `npm run dev`.
+2. Write a chapter in `app/src/content/chapters/`, and make `article.mdx` import only your
+   chapters. What you import is what you publish.
+3. Add sources to `bibliography.bib` and cite them, and replace the demonstration's metadata
+   with your own.
+4. For each mechanism a reader should test, place a figure with `HtmlEmbed`, choose its
+   publication state and caption, and test the properties its model must keep. Each figure has
+   one source.
+5. Register a figure in `figures.json` only when another site will show it.
+6. Run `npm run check`, `make doc-check` and `npm run test:e2e`, then review the prose, sources
+   and screenshots in a pull request.
+7. Build, export the PDF and read it. Readers get the build, not your preview.
+8. Deploy `app/dist` or the container, then open the public page and its downloads.
+
+This guide covers what an article author needs. The workspace's architecture, the scope of
+each check and the way the template is pinned and updated are described in the Markdown pages
+of the repository's `docs/` folder.

@@ -1,67 +1,76 @@
 # Upstream and provenance
 
-This workspace uses Thibaud Frere's
-[research-article-template](https://github.com/tfrere/research-article-template),
-also hosted on [Hugging Face](https://huggingface.co/spaces/tfrere/research-article-template).
-`template-provenance.json` records the exact source revision and SHA-256 hashes for
-the delegated implementation. `npm run content:check` detects unexpected edits to it.
+The article engine is Thibaud Frere's
+[research-article-template](https://github.com/tfrere/research-article-template), also
+published as a [Hugging Face Space](https://huggingface.co/spaces/tfrere/research-article-template).
+The workspace uses it unmodified, so that each upstream update arrives as a reviewable
+change. `template-provenance.json` records exactly which version is in use: the source commit
+and a SHA-256 hash for every template file. `npm run content:check`, which `npm run check`
+runs first, recomputes the hashes and fails on the first file that differs, naming it.
 
-Upstream components, styles, plugins, scripts and authoring skills retain their
-source and license. `LICENSE` contains the upstream CC BY 4.0 terms. The decorative banner,
-matrix and function plotter are upstream demonstration embeds. Visible captions
-and this document credit Thibaud Frere. The local routing embed and standalone page
-are project extensions.
+## What is upstream and what is local
 
-The application manifest adds `private: true` to prevent accidental npm publication
-and binds the preview server to localhost. Development also binds to localhost.
-The root workspace owns the shared lockfile, verification commands, CI and the
-static container setup.
+The template's components, styles, plugins, scripts and three agent skills
+(`article-frontmatter`, `create-html-embed` and `deploy-to-hf-spaces`) keep their source and
+their CC BY 4.0 license, reproduced in `LICENSE`. The workspace adds the routing embed, the
+standalone figure page, the `write-documentation` skill, `tools/`, `e2e/`, the documentation,
+CI and the workspace configuration.
+
+The application manifest, `app/package.json`, differs from upstream in two ways. It
+sets `private: true`, which prevents accidental publication to npm, and it binds the
+development and preview servers to localhost. The root workspace owns the shared lockfile, the
+verification commands, CI and the container setup.
 
 ## Demonstration content
 
-The landing page includes the upstream article and all of its demonstration chapters,
-embeds, images, audio and datasets at the pinned revision. `demoContent` in the provenance
-file records the source and checksums of the materialized assets. These are ordinary
-repository files, so a fresh checkout needs no Git LFS download to run the demo.
-The upstream demo chapter formatting is preserved by `.prettierignore`.
+The landing page renders the upstream article with all of its demonstration chapters, embeds,
+images, audio and datasets at the pinned revision. `demoContent` in the provenance file
+records their source and checksums. They are ordinary files, so a fresh clone runs the
+demonstration without a Git LFS download. `.prettierignore` keeps the demonstration chapters
+in their upstream formatting.
 
-The article retains the upstream author credit and example metadata, including its
-sample DOI. Replace that metadata when writing your own article. PDF downloads are
-hidden until a matching export is provided. Local optional examples and bibliography
-entries coexist with the upstream demo; the engine files retain their pinned hashes.
+The demonstration keeps the upstream author credit and example metadata, including a sample
+DOI; replace both when you write your own article. PDF downloads stay hidden, through
+`showPdf: false`, until a matching export is deployed.
 
-The upstream snapshot references `d3-hf-citations.html` and `hf_citations.csv` but does
-not supply them. Its live page also displays an “Embed not found” message for that
-example. This workspace preserves that source rather than fabricating a chart or data.
-Third-party iframe demonstrations and CDN dependencies require network access.
-The native PDF export can clip wide demo charts, including the Sankey example.
-Review figure widths and page breaks before using an export for publication.
+The pinned snapshot has three known gaps, which the workspace preserves rather than patches:
 
-## Reviewing upstream updates
+- The demonstration references `d3-hf-citations.html` and `hf_citations.csv`, which upstream
+  does not supply, so the page shows "Embed not found" there, as the live upstream page does.
+  The workspace does not fabricate a replacement chart or data.
+- Third-party iframe demonstrations and the libraries loaded from CDNs need network access.
+- The PDF exporter can clip wide charts, including the Sankey example, so review figure widths
+  and page breaks before publishing an export.
 
-The native `npm run sync:template:dry` previews upstream synchronization. Its
-scope includes root files as well as application files. Content is preserved,
-but project rules and configuration are not all protected. Do not run an actual
-sync blindly in the working project.
+## Update the template
 
-Use the native sync in a disposable copy, inspect the result against the pinned
-revision, and bring reviewed changes into this workspace. Preserve authored
-content, standalone routes, workspace tooling and local instructions. Record the
-accepted commit and implementation checksums in `template-provenance.json`, update
-the root npm lockfile, and run the project checks and publication export.
+The template's sync command, which `npm run sync:template:dry` previews, covers root files as
+well as the application. It preserves content but does not protect this workspace's rules and
+configuration, so running it in the working project can overwrite them. Review an update in a
+disposable copy instead:
 
-Keep upstream fixes small and documented. Prefer contributing shared engine fixes
-upstream over maintaining a second implementation here.
+1. Copy the repository to a scratch directory and run the sync there.
+2. Compare the result against the pinned revision, and decide which upstream changes to
+   accept.
+3. Bring the accepted changes into the workspace, preserving the authored content, the
+   standalone figure page, the tooling and the local instructions.
+4. Record the new commit and hashes in `template-provenance.json`, and update the root
+   `package-lock.json`.
+5. Run the project checks and a PDF export.
 
-## Dependency limitations
+Keep any local change to a template file small, and record it in the provenance file.
+Contribute engine fixes upstream where possible, rather than maintaining a second
+implementation here.
 
-The upstream dependency ranges include Astro 4 and other packages with known security
-advisories. This workspace preserves compatibility with that baseline; a successful
-build does not establish that its dependency tree is hardened. Run `npm audit` when
-reviewing an update. Several fixes require coordinated major framework upgrades.
+## Dependency baseline
 
-Development and preview servers are local tools. The supplied production container
-serves static output with nginx and does not run Astro's development server or SSR.
-Content, expressions and image inputs must be trusted repository sources. Static
-hosting reduces server-side exposure but does not make all dependency advisories
-irrelevant. Review the dependency baseline before public deployment.
+The template's dependency ranges include Astro 4 and other packages with known security
+advisories, and several of the fixes require coordinated major upgrades. The workspace stays
+compatible with that baseline, so a passing build says nothing about how hardened the
+dependency tree is. Run `npm audit` when reviewing an update.
+
+How the site runs limits the exposure. The development and preview servers are local tools
+bound to localhost, and the production container serves static files with nginx, without
+Astro's server or server-side rendering. That does not make every advisory irrelevant,
+because the build still processes content, expressions and images, which must therefore come
+from trusted repository sources. Review the dependency baseline before a public deployment.

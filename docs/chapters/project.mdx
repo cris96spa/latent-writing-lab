@@ -1,0 +1,149 @@
+import Accordion from "../../components/Accordion.astro";
+import Note from "../../components/Note.astro";
+
+## Start your own project
+
+It takes a repository of your own and two files. The repository holds one article: its
+chapters share references and figures and are released together. On GitHub, choose **Use
+this template → Create a new repository** on the starter's page, then clone your copy. The
+template gives your project a history of its own. Fork the starter instead only when you
+want to contribute changes back to it, since a fork stays tied to the starter's history.
+
+<Note title="A new section is a chapter, not a project" variant="info">
+  Create another repository only for an article you publish separately. A section of the same
+  article is another chapter, and a draft or a revision of it is a branch. Adding a chapter extends
+  the article at `/`; it never creates a second article URL.
+</Note>
+
+<Accordion title="First time here? Set up the tools and project">
+
+You need Git and Node.js 22.12 or later. npm comes with Node, and the project is tested on
+Node 22 and 24. On Windows, work inside WSL, which keeps the repository's symbolic links
+intact and runs its shell commands.
+
+Clone your project, replacing `YOUR-OWNER` and `YOUR-ARTICLE` with its GitHub owner and name,
+then install the dependencies and start the preview. Run these and every later command from
+the repository root:
+
+```sh
+git clone https://github.com/YOUR-OWNER/YOUR-ARTICLE.git
+cd YOUR-ARTICLE
+npm ci
+npm run dev
+```
+
+The last command keeps running and ends its startup with the address of the preview:
+
+```text
+ astro  v4.16.19 ready in 268 ms
+
+┃ Local    http://127.0.0.1:4321/
+```
+
+Open that address. You should see the template's demonstration article, "Bringing paper to
+life", which shows every component the engine offers. When port 4321 is taken, Astro prints
+`Port 4321 is in use, trying another one...` and the address it picked instead. It also
+prints two `[WARN] [content]` lines about `article.mdx` and `figures.json` on every start;
+the template produces them, and the article builds and renders normally. Keep the terminal
+open while you write, because saving a file refreshes the page.
+
+If the starter's GitHub page has no **Use this template** button, its owner must enable
+**Template repository** in the settings. You can also create an empty repository and copy the
+starter's tracked files into it, leaving out `.git`, `node_modules` and generated output.
+
+</Accordion>
+
+The demonstration is useful to browse, but it is not your article, and replacing it is where
+the first rule comes in: **what you import is what you publish**. One file,
+`app/src/content/article.mdx`, defines the article. Its frontmatter, the YAML block at the
+top, holds the title and other metadata. Its body imports chapters from
+`app/src/content/chapters/` and places them in reading order, so changing those imports
+changes the article. A first article therefore needs two files: a chapter, and an entry file
+that imports only that chapter.
+
+<Accordion title="Make a first article you can run">
+
+Create `app/src/content/chapters/my-article.mdx` with this content:
+
+```mdx
+import HtmlEmbed from "../../components/HtmlEmbed.astro";
+
+## What changes when frequency doubles?
+
+A sine wave repeats. Its frequency determines how many oscillations fit into an
+interval. Compare $f(x)=\sin(x)$ with $g(x)=\sin(2x)$.
+
+<HtmlEmbed
+  src="d3-equation-editor.html"
+  title="Double the frequency"
+  desc="Try sin(x), then sin(2*x). Upstream demo by Thibaud Frere."
+/>
+
+## What the curve shows
+
+Enter sin(x), then sin(2\*x). The second curve makes twice as many oscillations
+in the same interval. Its amplitude stays the same.
+```
+
+Then replace all of `app/src/content/article.mdx` with:
+
+```mdx
+---
+title: "What changes when frequency doubles?"
+description: "An explanation you can test with a curve."
+authors: []
+template: "paper"
+showPdf: false
+---
+
+import MyArticle from "./chapters/my-article.mdx";
+
+<MyArticle />
+```
+
+Save both files and return to the preview. You should see your question as the title, the
+two equations and the function plotter. Change a sentence and save again: the page updates.
+
+The demonstration chapters stay in `chapters/demo/` as examples, but they are not part of your
+article, because the entry file does not import them. Add your author information once you
+have checked it.
+
+</Accordion>
+
+The result is an article in the `paper` layout, which centers a short explanation. Before you
+share it, the metadata needs to be yours: the demonstration's author and its sample DOI are
+examples, not your attribution.
+
+<Accordion title="Choose a layout and make the project yours">
+
+The `template` field chooses the layout. `paper` suits a short explanation, while `article`
+adds a table of contents in the sidebar and the full presentation of the demonstration. Both
+show the banner from `app/src/content/embeds/banner.html`, which you can edit like any figure.
+
+The frontmatter also accepts `subtitle`, `authors`, `affiliations`, `published`, `doi`,
+`licence` and `showPdf`. Leave out any date or DOI you do not have. Authors refer to their
+affiliations by number, starting at one:
+
+```yaml
+authors:
+  - name: "Your name"
+    affiliations: [1]
+affiliations:
+  - name: "Your institution"
+```
+
+`links` accepts `{label, url}` entries shown in the `paper` layout's header, and
+`seoThumbImage` sets the image of social previews. Keep `showPdf: false` until the matching
+PDF is deployed with the site. The upstream frontmatter skill,
+`.ai/skills/article-frontmatter/SKILL.md`, lists every field with its default.
+
+Before sharing the project, rename it in the root `README.md` and `package.json`. Keep the
+upstream licenses and credits, and keep the `research-article-template` tag in the README
+metadata, which lists the project in the Hugging Face gallery of template articles. Choose
+your own license only for work you own.
+
+</Accordion>
+
+Your article has a title, two equations and a figure, all from one chapter. A real
+explanation needs sections, sources, images and asides that stay out of the argument's way.
+How does a chapter hold them?

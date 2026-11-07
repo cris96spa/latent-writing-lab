@@ -1,0 +1,138 @@
+import Note from "../../components/Note.astro";
+import Accordion from "../../components/Accordion.astro";
+import Glossary from "../../components/Glossary.astro";
+import Image from "../../components/Image.astro";
+import vocabulary from "../assets/image/visual-vocabulary-poster.png";
+
+## Write the chapters
+
+A chapter holds them by being written in <Glossary term="MDX" definition="Markdown that can import and render components." />:
+paragraphs, headings, lists and links are plain Markdown, and anything Markdown cannot
+express, such as an aside, a captioned image or a figure, is a component that you import from
+the template and place like an HTML tag. The template does the rest. It numbers the figures,
+builds the table of contents from your headings and collects the references at the end.
+
+Split a long article into chapters when it helps you edit and review one section at a time.
+The chapters still form one article: they cite from one bibliography and appear in the order
+the entry file places them. That order is the first rule at work again, and so is its
+consequence for drafts.
+
+<Note title="Everything you import is published" variant="danger">
+  The engine has no draft flag. A half-written chapter that the entry file imports is built and
+  deployed with the rest, so keep it out of the imports until it is ready to be read, and keep a
+  visible draft label in the article while it is under review.
+</Note>
+
+Start each chapter's sections at `##`, because the template renders the article title as the
+page's only top-level heading. Choosing a component is the next decision, and it depends on
+what the content does for the argument rather than on how it should look.
+
+<Accordion title="Choose a component for what you need to say">
+
+| When you need                                         | Use                                           |
+| ----------------------------------------------------- | --------------------------------------------- |
+| A distinction or assumption readers must notice       | `Note`                                        |
+| A short clarification alongside the argument          | `Sidenote`                                    |
+| A definition without leaving the paragraph            | `Glossary`                                    |
+| An optional derivation, setup command or code example | `Accordion`, like this one                    |
+| An attributed passage                                 | `Quote`                                       |
+| An image with caption, zoom and alt text              | `Image`                                       |
+| A comparison of two or more visuals                   | `Stack`                                       |
+| More room for a diagram                               | `Wide` or `FullWidth`; check mobile and print |
+| A caption and anchor around another element           | `Reference`                                   |
+| Something readers can vary                            | `HtmlEmbed`                                   |
+| A flow or dependency diagram                          | `HtmlEmbed` with an SVG diagram               |
+| Audio or an externally hosted app                     | Native `<audio>` or a titled `<iframe>`       |
+
+A chapter directly inside `chapters/` imports a component from `../../components/Name.astro`,
+and a chapter one folder deeper needs one more `../`:
+
+```mdx
+import Note from "../../components/Note.astro";
+import Accordion from "../../components/Accordion.astro";
+
+<Note title="These values are illustrative" variant="info">
+  The scores come from no trained model.
+</Note>
+
+<Accordion title="Why illustrative values?">Put the supporting explanation here.</Accordion>
+```
+
+Give a `Note` a title that states its point, as the example does, rather than "Note". The
+demonstration article shows every component in use, and its source is in
+`app/src/content/chapters/demo/components.mdx` and `markdown.mdx`.
+
+</Accordion>
+
+An image is the simplest evidence a chapter can carry. The `Image` component below optimizes
+the file, adds the caption and lets readers select the image to zoom in.
+
+<Image
+  src={vocabulary}
+  alt="Financial Times visual vocabulary: chart families for relationships including change, distribution, correlation and flow"
+  caption="Visual Vocabulary, Financial Times. Image included in the upstream template."
+/>
+
+Images, equations and citations each have a convention that keeps them working in every
+output, from the website to the PDF.
+
+<Accordion title="Add images, equations and sources">
+
+Put images in `app/src/content/assets/image/` and import them, so the build can optimize them.
+Give each one alt text that conveys its information, for readers who cannot see it, and a
+caption that states its role and source:
+
+```mdx
+import Image from "../../components/Image.astro";
+import picture from "../assets/image/placeholder.png";
+
+<Image src={picture} alt="Describe the information shown" caption="Explain and credit the image." />
+```
+
+Write inline math between single dollar signs, `$...$`, and display math between double ones,
+`$$...$$`. KaTeX renders it and supports most but not all LaTeX commands, so check anything
+beyond the basics in the preview. Code fences display code; they never run it.
+
+To cite a source, add its BibTeX record to `app/src/content/bibliography.bib` and write
+`[@your-key]` in the text. `[@hf-moe]` is an included example, and any chapter can cite any
+record. Copy the DOI and other metadata from the source itself rather than reconstructing them.
+
+To link to a figure, give it a unique `id` and link to `#your-id`, as in
+`[the example](#your-id)`. Markdown footnotes hold supporting context, and the `article`
+layout collects them with the references.
+
+For audio, import a file from `../assets/audio/`, place it with
+`<audio controls src={audioUrl} />` and provide a transcript. For an iframe, give it a
+descriptive title and a size you have tested at phone width; the remote host must allow
+embedding and stay online for your readers.
+
+</Accordion>
+
+<Accordion title="Convert a LaTeX or Notion draft">
+
+The template includes importers that convert an existing draft to MDX. Both can overwrite
+`article.mdx` and copy assets into the project, so commit your work first and run them on a
+separate branch or in a disposable copy.
+
+For LaTeX, install Pandoc and place `main.tex`, `main.bib` and the related section files in
+`app/scripts/latex-importer/input/`, then run:
+
+```sh
+npm run latex:convert
+```
+
+For other paths, see `npm run latex:convert -- --help`. Review the equation macros,
+references, images and component imports in the result.
+
+For Notion, give an integration access to the page, set `NOTION_TOKEN` and `NOTION_PAGE_ID` in
+your shell environment, and run `npm run notion:import`. Never commit the token. The importer
+empties its output directory and can change the article and the bibliography, so inspect
+`git diff` and build before accepting the result.
+
+An import is a one-way conversion. Once you accept it, edit the MDX; a later import replaces
+your edits instead of merging with them.
+
+</Accordion>
+
+Prose, equations and sources can state a claim and support it, but the reader still has to
+believe the sentence that describes the mechanism. How do you let them test it instead?

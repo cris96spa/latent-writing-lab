@@ -22,6 +22,9 @@ runs:
     - name: Check documentation links
       run: npm run docs:check
       shell: bash
+    - name: Build the interactive guide
+      run: npm run docs:build
+      shell: bash
     - name: Install Chromium
       run: npx playwright install --with-deps chromium
       shell: bash

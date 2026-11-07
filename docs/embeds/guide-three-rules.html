@@ -1,0 +1,408 @@
+<div class="guide-three-rules">
+  <p class="guide-three-rules__fallback">
+    Chapters and figures meet in the entry file, article.mdx. Only imported chapters reach the build
+    in app/dist, which becomes the website, the PDF and the standalone figure pages. The development
+    preview runs on your machine and is never published.
+  </p>
+</div>
+<style>
+  .guide-three-rules {
+    position: relative;
+    color: var(--text-color);
+  }
+  .guide-three-rules svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .guide-three-rules .node rect {
+    fill: var(--surface-bg);
+    stroke: var(--border-color);
+    stroke-width: 1.5;
+    transition:
+      stroke 0.15s ease,
+      opacity 0.15s ease;
+  }
+  .guide-three-rules .node.is-ghost rect {
+    fill: transparent;
+    stroke-dasharray: 5 4;
+  }
+  .guide-three-rules .node .title {
+    font-size: 13px;
+    font-weight: 600;
+    fill: var(--text-color);
+  }
+  .guide-three-rules .node .sub {
+    font-size: 10.5px;
+    fill: var(--muted-color);
+  }
+  .guide-three-rules .edge path {
+    fill: none;
+    stroke: var(--muted-color);
+    stroke-width: 1.5;
+  }
+  .guide-three-rules .edge.is-ghost path {
+    stroke-dasharray: 5 4;
+  }
+  .guide-three-rules .edge text {
+    font-size: 10.5px;
+    fill: var(--muted-color);
+  }
+  .guide-three-rules .node,
+  .guide-three-rules .edge {
+    transition: opacity 0.15s ease;
+  }
+  .guide-three-rules[data-rule]:not([data-rule="all"]) .node:not(.is-on),
+  .guide-three-rules[data-rule]:not([data-rule="all"]) .edge:not(.is-on) {
+    opacity: 0.28;
+  }
+  .guide-three-rules .node.is-on rect {
+    stroke: var(--primary-color);
+    stroke-width: 2.5;
+  }
+  .guide-three-rules .edge.is-on path {
+    stroke: var(--primary-color);
+    stroke-width: 2.5;
+  }
+  .guide-three-rules .arrow-default {
+    fill: var(--muted-color);
+  }
+  .guide-three-rules .arrow-on {
+    fill: var(--primary-color);
+  }
+  .guide-three-rules__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .guide-three-rules__controls button:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+  .guide-three-rules__caption {
+    margin: 10px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 3em;
+  }
+</style>
+<script>
+  (() => {
+    // Model: what the workspace contains and which parts each rule concerns.
+    const NODES = {
+      chapter: { title: "Chapter", sub: "intro.mdx · imported" },
+      draft: { title: "Chapter", sub: "draft.mdx · not imported", ghost: true },
+      figure: { title: "Figure", sub: "routing.html" },
+      entry: { title: "Entry file", sub: "article.mdx" },
+      preview: { title: "Your preview", sub: "npm run dev", ghost: true },
+      build: { title: "Build", sub: "app/dist" },
+      site: { title: "Website", sub: "what readers open" },
+      pdf: { title: "PDF", sub: "figures as stills" },
+      page: { title: "Figure page", sub: "/figures/routing/" },
+    };
+    const EDGES = [
+      { id: "chapter-entry", from: "chapter", to: "entry" },
+      { id: "figure-entry", from: "figure", to: "entry" },
+      { id: "figure-build", from: "figure", to: "build", label: "figures.json" },
+      { id: "entry-build", from: "entry", to: "build" },
+      { id: "entry-preview", from: "entry", to: "preview", ghost: true },
+      { id: "build-site", from: "build", to: "site" },
+      { id: "build-pdf", from: "build", to: "pdf" },
+      { id: "build-page", from: "build", to: "page" },
+    ];
+    const RULES = [
+      {
+        id: "all",
+        label: "The whole flow",
+        nodes: [],
+        edges: [],
+        text: "Chapters and figures meet in the entry file, and the build turns it into everything readers receive. Select a rule to see where it applies.",
+      },
+      {
+        id: "import",
+        label: "What you import is what you publish",
+        nodes: ["chapter", "draft", "entry"],
+        edges: ["chapter-entry"],
+        text: "article.mdx imports intro.mdx, so the build publishes it. draft.mdx sits in the same folder, but nothing imports it, so no reader ever sees it.",
+      },
+      {
+        id: "source",
+        label: "Each figure has one source",
+        nodes: ["figure", "entry", "build", "page"],
+        edges: ["figure-entry", "figure-build", "build-page"],
+        text: "routing.html reaches the article through an import and its own page through figures.json. Fixing that one file fixes both.",
+      },
+      {
+        id: "build",
+        label: "Readers get the build",
+        nodes: ["preview", "build", "site", "pdf", "page"],
+        edges: ["entry-build", "build-site", "build-pdf", "build-page"],
+        text: "Readers receive app/dist and the files made from it. Your preview runs only on your machine, so checks and exports run on the build.",
+      },
+    ];
+    // Two layouts in view-box units: left to right when wide, in rows when narrow. `route`
+    // fixes the direction of an edge where the automatic choice would cross another one.
+    const LAYOUTS = {
+      wide: {
+        size: [820, 316],
+        w: 150,
+        h: 54,
+        at: {
+          chapter: [10, 10],
+          draft: [10, 100],
+          figure: [10, 250],
+          preview: [230, 10],
+          entry: [230, 130],
+          build: [430, 130],
+          site: [640, 30],
+          pdf: [640, 130],
+          page: [640, 250],
+        },
+        widths: { site: 170, pdf: 170, page: 170 },
+        route: { "figure-build": "v" },
+      },
+      narrow: {
+        size: [360, 414],
+        // The gap between columns is narrower than an edge label; the caption names figures.json.
+        hideLabels: true,
+        w: 150,
+        h: 54,
+        at: {
+          chapter: [10, 10],
+          draft: [200, 10],
+          entry: [10, 120],
+          preview: [200, 120],
+          figure: [10, 230],
+          build: [200, 230],
+          site: [4, 350],
+          pdf: [124, 350],
+          page: [244, 350],
+        },
+        widths: { site: 112, pdf: 112, page: 112 },
+        route: {
+          "chapter-entry": "v",
+          "figure-entry": "v",
+          "figure-build": "h",
+          "entry-preview": "h",
+          "entry-build": "h",
+          "build-site": "v",
+          "build-pdf": "v",
+          "build-page": "v",
+        },
+      },
+    };
+
+    function box(layout, id) {
+      const [x, y] = layout.at[id];
+      return { x, y, w: layout.widths[id] || layout.w, h: layout.h };
+    }
+    const center = (b) => [b.x + b.w / 2, b.y + b.h / 2];
+
+    // Routes every edge between facing sides of its boxes. Edges that share a side are spread
+    // along it, ordered by where their other end lies, so they leave and arrive without crossing.
+    function routeEdges(layout) {
+      const sides = new Map();
+      const plans = EDGES.map((edge) => {
+        const a = box(layout, edge.from);
+        const b = box(layout, edge.to);
+        const [ac, bc] = [center(a), center(b)];
+        const auto = Math.abs(bc[0] - ac[0]) > Math.abs(bc[1] - ac[1]) * 1.4 ? "h" : "v";
+        const flow = (layout.route && layout.route[edge.id]) || auto;
+        const forward = flow === "h" ? bc[0] > ac[0] : bc[1] > ac[1];
+        const [fromSide, toSide] =
+          flow === "h"
+            ? forward
+              ? ["right", "left"]
+              : ["left", "right"]
+            : forward
+              ? ["bottom", "top"]
+              : ["top", "bottom"];
+        const plan = { edge, flow, ends: [] };
+        for (const [id, side, other] of [
+          [edge.from, fromSide, bc],
+          [edge.to, toSide, ac],
+        ]) {
+          const key = `${id}:${side}`;
+          if (!sides.has(key)) sides.set(key, []);
+          const end = { id, side, other, t: 0.5 };
+          sides.get(key).push(end);
+          plan.ends.push(end);
+        }
+        return plan;
+      });
+      for (const ends of sides.values()) {
+        const axis = ends[0].side === "left" || ends[0].side === "right" ? 1 : 0;
+        ends.sort((p, q) => p.other[axis] - q.other[axis]);
+        ends.forEach((end, i) => (end.t = (i + 1) / (ends.length + 1)));
+      }
+      const anchor = ({ id, side, t }, gap) => {
+        const b = box(layout, id);
+        if (side === "right") return [b.x + b.w + gap, b.y + t * b.h];
+        if (side === "left") return [b.x - gap, b.y + t * b.h];
+        if (side === "bottom") return [b.x + t * b.w, b.y + b.h + gap];
+        return [b.x + t * b.w, b.y - gap];
+      };
+      const routes = new Map();
+      for (const { edge, flow, ends } of plans) {
+        const p0 = anchor(ends[0], 0);
+        const p3 = anchor(ends[1], 4);
+        const p1 = flow === "h" ? [(p0[0] + p3[0]) / 2, p0[1]] : [p0[0], (p0[1] + p3[1]) / 2];
+        const p2 = flow === "h" ? [(p0[0] + p3[0]) / 2, p3[1]] : [p3[0], (p0[1] + p3[1]) / 2];
+        const mid = [0, 1].map((k) => (p0[k] + 3 * p1[k] + 3 * p2[k] + p3[k]) / 8);
+        routes.set(edge.id, { d: `M${p0}C${p1} ${p2} ${p3}`, mid });
+      }
+      return routes;
+    }
+
+    function highlight(ruleId) {
+      const rule = RULES.find((item) => item.id === ruleId) || RULES[0];
+      return { rule, nodes: new Set(rule.nodes), edges: new Set(rule.edges) };
+    }
+
+    // Rendering
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    function el(name, attrs = {}, parent) {
+      const node = document.createElementNS(SVG_NS, name);
+      for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+      if (parent) parent.appendChild(node);
+      return node;
+    }
+
+    function mount(container) {
+      if (container.dataset.mounted === "true") return;
+      container.dataset.mounted = "true";
+      // Marker ids must be unique on the page, even when several evaluations mount instances.
+      const uid = `guide-three-rules-${Math.random().toString(36).slice(2, 10)}`;
+      container.querySelector(".guide-three-rules__fallback")?.remove();
+
+      const svg = el("svg", { role: "img" }, container);
+      const controls = document.createElement("div");
+      controls.className = "guide-three-rules__controls";
+      controls.setAttribute("role", "group");
+      controls.setAttribute("aria-label", "Rules");
+      container.appendChild(controls);
+      const caption = document.createElement("p");
+      caption.className = "guide-three-rules__caption";
+      caption.setAttribute("aria-live", "polite");
+      container.appendChild(caption);
+
+      const state = { rule: "all", layout: null };
+      const buttons = RULES.map((rule) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "button";
+        button.textContent = rule.label;
+        button.dataset.rule = rule.id;
+        button.addEventListener("click", () => {
+          state.rule = rule.id;
+          update();
+        });
+        controls.appendChild(button);
+        return button;
+      });
+
+      function draw() {
+        const layout = LAYOUTS[state.layout];
+        svg.replaceChildren();
+        svg.setAttribute("viewBox", `0 0 ${layout.size.join(" ")}`);
+        svg.setAttribute(
+          "aria-label",
+          "Chapters and a figure flow into the entry file article.mdx; an unimported draft chapter does not. The entry file feeds your local preview and the build in app/dist, which produces the website, the PDF and the figure page.",
+        );
+        const defs = el("defs", {}, svg);
+        for (const kind of ["default", "on"]) {
+          const marker = el(
+            "marker",
+            {
+              id: `${uid}-arrow-${kind}`,
+              viewBox: "0 0 10 10",
+              refX: "6",
+              refY: "5",
+              markerWidth: "7",
+              markerHeight: "7",
+              orient: "auto-start-reverse",
+            },
+            defs,
+          );
+          el("path", { d: "M0,0L10,5L0,10z", class: `arrow-${kind}` }, marker);
+        }
+        const routes = routeEdges(layout);
+        for (const edge of EDGES) {
+          const { d, mid } = routes.get(edge.id);
+          const g = el(
+            "g",
+            { class: `edge${edge.ghost ? " is-ghost" : ""}`, "data-edge": edge.id },
+            svg,
+          );
+          el("path", { d }, g);
+          if (edge.label && !layout.hideLabels) {
+            el("text", { x: mid[0] + 6, y: mid[1] - 6 }, g).textContent = edge.label;
+          }
+        }
+        for (const [id, node] of Object.entries(NODES)) {
+          const b = box(layout, id);
+          const g = el(
+            "g",
+            { class: `node${node.ghost ? " is-ghost" : ""}`, "data-node": id },
+            svg,
+          );
+          el("rect", { x: b.x, y: b.y, width: b.w, height: b.h, rx: 8 }, g);
+          const cx = b.x + b.w / 2;
+          const title = el(
+            "text",
+            { x: cx, y: b.y + 22, "text-anchor": "middle", class: "title" },
+            g,
+          );
+          title.textContent = node.title;
+          const sub = el("text", { x: cx, y: b.y + 40, "text-anchor": "middle", class: "sub" }, g);
+          sub.textContent = node.sub;
+        }
+      }
+
+      function update() {
+        const { rule, nodes, edges } = highlight(state.rule);
+        container.dataset.rule = rule.id;
+        for (const g of svg.querySelectorAll("[data-node]")) {
+          g.classList.toggle("is-on", nodes.has(g.dataset.node));
+        }
+        for (const g of svg.querySelectorAll("[data-edge]")) {
+          const on = edges.has(g.dataset.edge);
+          g.classList.toggle("is-on", on);
+          g.querySelector("path").setAttribute(
+            "marker-end",
+            `url(#${uid}-arrow-${on ? "on" : "default"})`,
+          );
+        }
+        for (const button of buttons) {
+          const pressed = button.dataset.rule === rule.id;
+          button.setAttribute("aria-pressed", String(pressed));
+          button.classList.toggle("button--ghost", !pressed);
+        }
+        caption.textContent = rule.text;
+      }
+
+      function fit() {
+        const layout = (container.clientWidth || 820) < 600 ? "narrow" : "wide";
+        if (layout === state.layout) return;
+        state.layout = layout;
+        container.dataset.layout = layout;
+        draw();
+        update();
+      }
+
+      fit();
+      if (window.ResizeObserver) new ResizeObserver(fit).observe(container);
+      else window.addEventListener("resize", fit);
+    }
+
+    // HtmlEmbed evaluates this script when the figure scrolls into view, without a current
+    // script element, so every unmounted instance on the page is mounted here.
+    const bootstrap = () => document.querySelectorAll(".guide-three-rules").forEach(mount);
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", bootstrap, { once: true });
+    } else {
+      bootstrap();
+    }
+  })();
+</script>

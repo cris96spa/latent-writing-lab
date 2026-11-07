@@ -39,6 +39,7 @@ jobs:
           name: article-and-browser-checks-node-${{ matrix.node-version }}
           path: |
             app/dist/
+            docs-dist/
             playwright-report/
             test-results/
           if-no-files-found: ignore

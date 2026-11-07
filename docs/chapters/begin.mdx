@@ -1,0 +1,76 @@
+import HtmlEmbed from "../../components/HtmlEmbed.astro";
+import Note from "../../components/Note.astro";
+import Sidenote from "../../components/Sidenote.astro";
+
+## An article readers can test
+
+How do you publish an explanation that readers can check for themselves instead of taking it
+on trust? A paper states its result and asks to be believed. An interactive article hands the
+reader the parameter and lets them watch the result change. Try it on the function plotter
+below: enter `sin(x)`, then `sin(2*x)`. The second curve oscillates twice as often over the
+same interval, and you saw it happen rather than read that it does.
+
+<HtmlEmbed
+  id="guide-function"
+  src="d3-equation-editor.html"
+  title="Function plotter"
+  desc="Function plotter by Thibaud Frere, research-article-template (CC BY 4.0)."
+/>
+
+This workspace builds articles like that one. You write the prose in Markdown and the math in
+LaTeX, such as $f(x)=\sin(2x)$, cite sources from a BibTeX file, and write each figure as one
+HTML file. Thibaud Frere's research article template turns those sources into the page you
+are reading. It is the same engine behind Hugging Face's Smol Training Playbook, LLM
+Evaluation Guidebook and MoE Training Handbook, and it supplies the layout, the theme, the citations and the frame
+around each figure.
+
+<Sidenote>
+  This guide is itself an article built by that engine. The plotter is the file{" "}
+  <code>d3-equation-editor.html</code> in <code>app/src/content/embeds/</code>.
+</Sidenote>
+
+By the end of this guide, you will have a project of your own containing a one-chapter
+article with an equation and this plotter. You will also have checked and built it, exported
+it as a PDF, and you will know how to add your own figures and data and how to publish a
+figure on its own page for another website.
+
+<Note title="How to read this guide" variant="info">
+
+You need to be comfortable with Markdown and a terminal; JavaScript can wait until you write
+a figure of your own. Read the chapters in order if you are starting an article. Each one
+explains what happens and why, and the exact files and commands sit in panels titled by their
+task, so you can open them when you are ready to act. If you already have a draft in LaTeX or
+Notion, read [Start your own project](#start-your-own-project), then convert the draft as
+described in [Write the chapters](#write-the-chapters). If you only need to show a figure on
+another website, go straight to [Reuse a figure on another site](#reuse-a-figure-on-another-site).
+If you maintain the workspace itself, the Markdown pages in the repository's `docs/` folder
+cover its architecture, checks and provenance.
+
+</Note>
+
+Three rules shape everything that follows, and each chapter of this guide comes back to one
+of them:
+
+1. **What you import is what you publish.** One entry file, `article.mdx`, lists the chapters
+   of the article. A chapter it imports is built and published; a chapter it does not import
+   is not part of the article, and nothing else decides.
+2. **Each figure has one source.** A figure is one HTML file. The article and the figure's
+   standalone page both render that file, so a fix in one place reaches every reader.
+3. **Readers get the build, not your preview.** What you deploy is the static site in
+   `app/dist`, and a PDF holds each figure as a still image of the state it opens in. Checks
+   and exports therefore run on the build.
+
+The figure below shows where each rule applies in a small project with two chapters and one
+figure. It opens on the whole flow. Select **What you import is what you publish**, and the
+unimported draft chapter stands apart from everything the build produces; select **Readers
+get the build**, and your preview drops out of what readers receive.
+
+<HtmlEmbed
+  id="guide-rules"
+  src="guide-three-rules.html"
+  title="Where the three rules apply"
+  desc="An example project: two chapters, one figure, and what the build makes of them."
+/>
+
+The plotter above already runs inside this guide. What does it take to make it run in an
+article of your own?
