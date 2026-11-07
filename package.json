@@ -27,7 +27,8 @@
     "docs:check": "node tools/check-docs.mjs",
     "docs:dev": "node tools/docs.mjs dev",
     "docs:build": "node tools/docs.mjs build",
-    "docs:preview": "node tools/docs.mjs preview"
+    "docs:preview": "node tools/docs.mjs preview",
+    "readme:media": "node tools/readme-media.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

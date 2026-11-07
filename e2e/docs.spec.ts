@@ -21,24 +21,26 @@ test("guide renders native examples and exposes the project walkthrough", async 
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Write an interactive article");
   await expect(page.locator(".html-embed__error")).toHaveCount(0);
-  const plot = page.locator("figure#guide-function");
-  const curve = plot.locator("path.function-curve");
-  await expect(curve).toBeVisible();
-  const before = await curve.getAttribute("d");
-  await plot.getByRole("textbox").fill("sin(2*x)");
-  await expect(curve).not.toHaveAttribute("d", before!);
-  await expect(page.locator(".katex").first()).toBeVisible();
-  const tutorial = page
-    .locator("details")
-    .filter({ has: page.getByText("Make a first article you can run", { exact: true }) });
-  await expect(tutorial).not.toHaveAttribute("open");
-  await tutorial.locator("summary").click();
-  await expect(tutorial.locator("pre").first()).toBeVisible();
-  await expect(tutorial).toContainText('import MyArticle from "./chapters/my-article.mdx"');
+  // The opening figure tests the claim the guide starts from.
   const routing = page.locator("figure#guide-routing");
+  await expect(routing.locator(".routing-value").first()).toHaveText("59.9%");
+  await routing.getByRole("slider", { name: "Temperature", exact: true }).fill("2");
+  await expect(routing.locator(".routing-value").first()).toHaveText("55.0%");
   await routing.getByRole("slider", { name: "Active experts (k)" }).fill("1");
   await expect(routing.locator(".routing-value").first()).toHaveText("100.0%");
-  await plot.scrollIntoViewIfNeeded();
+  await expect(page.locator(".katex").first()).toBeVisible();
+  // The first-article walkthrough is in the reading flow; only the setup detail is folded.
+  const walkthrough = page.getByRole("heading", { name: "Make a first article you can run" });
+  await expect(walkthrough).toBeVisible();
+  await expect(page.locator("pre", { hasText: "import MyArticle" }).first()).toBeVisible();
+  await expect(page.locator("pre", { hasText: "import MyArticle" }).first()).toContainText(
+    'import MyArticle from "./chapters/my-article.mdx"',
+  );
+  const setup = page.locator("details").filter({
+    has: page.getByText("First time here? Set up the tools and the preview", { exact: true }),
+  });
+  await expect(setup).not.toHaveAttribute("open");
+  await routing.scrollIntoViewIfNeeded();
   await page.screenshot({ path: testInfo.outputPath("guide-figure.png") });
   expect(errors).toEqual([]);
 });
@@ -80,9 +82,11 @@ test("guide supports mobile reading and native theme controls", async ({ page },
   await page.getByRole("button", { name: "Toggle color theme" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.getByRole("button", { name: "Close table of contents" }).click();
-  await page.getByText("Make a first article you can run", { exact: true }).click();
-  const tutorial = page.locator("details[open]");
-  await expect(tutorial.locator("pre").first()).toBeVisible();
+  await page
+    .getByText("First time here? Set up the tools and the preview", { exact: true })
+    .click();
+  const setup = page.locator("details[open]");
+  await expect(setup.locator("pre").first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("guide-mobile.png") });
 });
@@ -96,5 +100,5 @@ test("guide reuses standalone figures and exports its own text", async ({ page, 
   expect(await text.text()).toContain("Write an interactive article");
   const gallery = await request.get("/dataviz/");
   expect(gallery.ok()).toBe(true);
-  expect(await gallery.text()).toContain("d3-equation-editor");
+  expect(await gallery.text()).toContain("d3-routing");
 });

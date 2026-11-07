@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { watch } from "node:fs";
-import { access, cp, mkdir, readdir, rm, stat } from "node:fs/promises";
+import { access, cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -102,6 +102,11 @@ if (command === "dev") {
   }
 }
 
+const baseArg = args.findIndex((arg) => arg === "--base" || arg.startsWith("--base="));
+const baseValue =
+  baseArg < 0 ? "/" : args[baseArg].includes("=") ? args[baseArg].split("=")[1] : args[baseArg + 1];
+const base = `/${(baseValue || "").replace(/^\/+|\/+$/g, "")}/`.replace(/^\/\/$/, "/");
+
 const astro = resolve(root, "node_modules/astro/astro.js");
 const flags = command === "dev" ? [] : ["--outDir", output];
 if (command !== "build") {
@@ -122,7 +127,29 @@ child.on("error", (error) => {
   for (const watcher of watchers) watcher.close();
   process.exitCode = 1;
 });
-child.on("exit", (code, signal) => {
+child.on("exit", async (code, signal) => {
   for (const watcher of watchers) watcher.close();
   process.exitCode = code ?? (signal === "SIGINT" || signal === "SIGTERM" ? 0 : 1);
+  if (command === "build" && code === 0 && base !== "/") await rebase(base);
 });
+
+// Astro prefixes its own assets with --base, but the template also writes root-relative
+// links such as /scripts/color-palettes.js. Hosting under a subpath, as GitHub Pages does for
+// a project site, needs those prefixed too; the engine's files stay untouched.
+async function rebase(prefix) {
+  let count = 0;
+  const files = (await readdir(output, { recursive: true })).filter((file) =>
+    file.endsWith(".html"),
+  );
+  for (const file of files) {
+    const path = join(output, file);
+    const html = await readFile(path, "utf8");
+    const next = html.replace(/\b(src|href)="(\/(?!\/)[^"]*)"/g, (match, attribute, url) => {
+      if (url.startsWith(prefix) || url === prefix.slice(0, -1)) return match;
+      count += 1;
+      return `${attribute}="${prefix}${url.slice(1)}"`;
+    });
+    if (next !== html) await writeFile(path, next);
+  }
+  console.log(`Prefixed ${count} root-relative links in ${files.length} pages with ${prefix}.`);
+}

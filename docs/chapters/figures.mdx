@@ -1,77 +1,130 @@
-import HtmlEmbed from "../../components/HtmlEmbed.astro";
 import Accordion from "../../components/Accordion.astro";
 import Note from "../../components/Note.astro";
 
-## Let readers test the claim
+## Look inside the figure
 
-Hand them the mechanism as a figure they can operate. The routing figure below takes a
-sentence that readers would otherwise have to believe, "a mixture-of-experts router sends
-each token to its highest-scoring experts and splits the token between them", and lets them
-check it. It opens with two active experts at temperature one, where Expert 1 receives 59.9%
-of the token and Expert 4 receives 40.1%. Set **Active experts** to 1, and the top expert
-receives all of it. Set it back to 2 and raise **Temperature** to its maximum of 2: the split
-moves to 55.0% and 45.0%, closer together, but the order of the experts never changes.
+The routing figure in your article is one file, `app/src/content/embeds/d3-routing.html`, and
+that is the second rule: **each figure has one source**. The `HtmlEmbed` tag you wrote does not
+copy the file into your chapter. It places a frame with the title and caption, and starts the
+file's script once the reader scrolls to it. This guide's opening figure, your article's figure
+and the figure's standalone page all render that one file.
 
-<HtmlEmbed
-  id="guide-routing"
-  src="d3-routing.html"
-  title="Routing example"
-  desc="Illustrative scores [2.2, 1.3, 0.6, 1.8], not measurements from a trained model."
-/>
+The file is a fragment of HTML with three parts: one root element, a style block whose rules
+all start from that element's class, and a script that runs once and mounts every copy of the
+figure on the page. Reduced to its outline, it reads:
 
-The figure is one file, `app/src/content/embeds/d3-routing.html`, and that is the second rule:
-**each figure has one source**. A figure is an HTML fragment with its own styles and script,
-and the `HtmlEmbed` component places it in a chapter, gives it a title and caption, and starts
-its script. The same file can appear in several chapters, or on a page of its own, without
-being copied.
+```html
+<div class="d3-routing">
+  <p class="routing-fallback">
+    Expert 1 receives 59.9% and Expert 4 receives 40.1%.
+  </p>
+</div>
+<style>
+  .d3-routing {
+    color: var(--text-color);
+  }
+</style>
+<script>
+  (() => {
+    function route(logits, k, temperature) {
+      /* the model: scores in, weights out */
+    }
+    function mount(container) {
+      /* the drawing and controls, inside this container */
+    }
+    document.querySelectorAll(".d3-routing").forEach(mount);
+  })();
+</script>
+```
 
-Inside that file, the calculation is a function apart from the drawing code, and the figure
-records the function's exact output on each value label, next to the rounded percentage. This
-is what makes the figure testable rather than merely interactive. The browser tests set every
-combination of the two controls, read the exact weights, and confirm that they sum to one and
-that temperature never reorders the experts, however the layout changes.
+The paragraph inside the root is what a reader sees before the script runs, or if it never
+does. The script replaces it with the bars and sliders, drawn with D3, though SVG, Canvas or
+plain HTML work equally well; React is not needed.
 
-A figure also has a **publication state**: the state it opens in, which a reset restores. The
-routing figure's publication state is two experts at temperature one. The state matters
-beyond the website, because the PDF exporter replaces every figure with a screenshot of how it
-opens. Choose that state, and its caption, so that the figure makes its point without anyone
-touching it.
+The part that matters most is the split between `route` and `mount`. `route` is the scientific
+model, and it knows nothing about the page: it takes the scores, the number of active experts
+and the temperature, and returns the weights. It is your article's equation,
 
-There are three ways to get a figure, in increasing order of effort: use one of the supplied
-figures as it is, configure one with your own data, or adapt a copy of one for a new
-interaction. Before starting on the third, check that the reader really has something to vary.
+$$
+w_i = \frac{e^{s_i/T}}{\sum_{j \in \text{top-}k} e^{s_j/T}},
+$$
+
+written in JavaScript:
+
+```js
+function route(logits, k, temperature) {
+  // Subtracting the maximum avoids overflow; weights are unchanged.
+  const maximum = Math.max(...logits);
+  const scores = logits.map((value) =>
+    Math.exp((value - maximum) / temperature),
+  );
+  const total = scores.reduce((a, b) => a + b, 0);
+  const probabilities = scores.map((value) => value / total);
+  const selected = logits
+    .map((_, i) => i)
+    .sort((a, b) => logits[b] - logits[a] || a - b)
+    .slice(0, k);
+  const selectedTotal = selected.reduce(
+    (sum, i) => sum + probabilities[i],
+    0,
+  );
+  return {
+    probabilities,
+    selected,
+    weights: probabilities.map((p, i) =>
+      selected.includes(i) ? p / selectedTotal : 0,
+    ),
+  };
+}
+```
+
+`mount` calls `route` and draws whatever it returns. Because the model is separate, a test can
+check the science without reading a single pixel. The figure writes each exact weight next to
+its rounded percentage, and the starter's browser tests step both sliders through a grid of
+values and confirm the claims your article makes: the weights always sum to one, and
+temperature never reorders the experts. That is what makes the figure _testable_ rather than
+merely interactive: a change that broke either property would fail a test before any reader
+saw it.
+
+A figure also has a **publication state**: the state it opens in, which its reset button
+restores. The routing figure's is two experts at temperature one. The state matters beyond the
+website, because the PDF exporter replaces every figure with a screenshot of how it opens, so
+choose the state and the caption that make the point without anyone touching the controls.
 
 <Note title="When a static image is enough" variant="info">
-  If readers would never change a parameter, an interactive figure adds code without adding
-  understanding. A captioned `Image` is clearer, loads faster and prints exactly as it appears.
+  If readers would never change a parameter, an interactive figure
+  adds code without adding understanding. A captioned `Image` is
+  clearer, loads faster and prints exactly as it appears.
 </Note>
+
+There are three ways to get a figure of your own, in increasing order of effort: use a supplied
+figure as it is, as your article does; configure one with your own data; or copy one and change
+it.
 
 <Accordion title="Build your own figure from an example">
 
 Start from the supplied figure closest to what you need, in `app/src/content/embeds/`:
-`d3-equation-editor.html` for expressions, `d3-routing.html` for a staged explanation,
+`d3-routing.html` for a staged explanation, `d3-equation-editor.html` for expressions,
 `smol-playbook/generic-d3-line-chart.html` for curves, or `sankey.html` for flows. The
 demonstration article has more, including a parameter calculator, a drawable neural network,
-heatmaps, typography and arXiv clusters. Open `/dataviz/` in the preview to browse the figures
-the current article uses.
+heatmaps and arXiv clusters. Open `/dataviz/` in the preview to browse the figures the current
+article uses.
 
-Copy the example to a file with a descriptive name. Rename the root CSS class and the selectors
-in your copy, so the two figures cannot affect each other on the same page, and keep the
-attribution of any code you reuse. The full conventions are in the upstream embed skill,
-`.ai/skills/create-html-embed/SKILL.md`, and its `directives.md`.
+Copy the example to a file with a descriptive name, rename the root class and every selector in
+your copy so the two figures cannot affect each other on one page, and keep the attribution of
+any code you reuse. Then keep the rules the routing figure follows:
 
-An embed has three parts: one root element, CSS scoped to that element's class, and a script
-wrapped in an immediately invoked function. SVG, Canvas and D3 all work inside it, and React is
-not needed. A few rules keep the figure reliable:
-
-- Keep calculations in functions separate from the rendering code, so tests can check them.
+- Keep the model in functions separate from the drawing, so tests can check it.
 - Keep state inside each instance, and guard against mounting twice, because a page can show
   the same figure more than once.
 - Take colors from the template's CSS variables and `window.ColorPalettes`, and recompute
   colors calculated in JavaScript when the theme changes.
-- Use labelled HTML controls, so the figure works with a keyboard.
+- Use labelled HTML controls, so the figure works with a keyboard and a screen reader.
 - Size the figure from its container with a `ResizeObserver`, so it fits on a phone.
 - Open on a meaningful publication state, and add a reset when readers can get lost.
+
+The upstream embed skill, `.ai/skills/create-html-embed/SKILL.md`, and its `directives.md`
+have the complete conventions.
 
 </Accordion>
 
@@ -111,11 +164,11 @@ import HtmlEmbed from "../../components/HtmlEmbed.astro";
 />
 ```
 
-`HtmlEmbed` passes `data` and `config` to the figure without interpreting them, so the
-figure's script decides what they mean. This chart reads `config.dataUrl`, while other figures
-read a `data-datafiles` attribute on their wrapper. Read the loader in the script before
-changing the shape of a dataset. In your own figures, validate numeric values and show a
-readable message when loading fails.
+`HtmlEmbed` passes `data` and `config` to the figure without interpreting them, so the figure's
+script decides what they mean. This chart reads `config.dataUrl`, while other figures read a
+`data-datafiles` attribute on their wrapper. Read the loader in the script before changing the
+shape of a dataset. In your own figures, validate numeric values and show a readable message
+when loading fails.
 
 Everything in the data folder is deployed, even when no chapter uses it, so keep private data
 and credentials out of it. For a large dataset, sample or aggregate it and document the method,
@@ -123,16 +176,35 @@ rather than making every reader download detail the figure does not show.
 
 </Accordion>
 
-## Reuse a figure on another site
+<Accordion title="Ask someone else to build a figure">
 
-A figure in your article may also belong on your personal site or in a course page. The
-second rule answers how: the figure keeps one owner. Its HTML source, data and tests stay in
-this project, which publishes the figure on a standalone page, and the other site embeds that
-page. An improvement then reaches both places with a single deployment, and there is no copy
-to fall out of date.
+When a colleague or a coding agent builds the figure, the brief decides the result more than
+the code does. State the claim and who it is for, the data with its source and
+simplifications, the controls with their ranges and defaults, and the publication state:
 
-[Open the same routing figure on its own](/figures/routing/). It has the same model and
-controls as the one above, because both pages render the same file.
+```text
+Read AGENTS.md and the upstream HTML embed skill and directives.
+Teaching claim and audience: ...
+Data, source and simplifying assumptions: ...
+Controls, ranges and defaults: ...
+Static publication state: ...
+Use native HtmlEmbed, theme variables and palettes.
+Keep the model separate from rendering and test its invariants.
+Use one embed source for the article and any standalone figure page.
+```
+
+</Accordion>
+
+## Show the figure on another site
+
+Once the figure explains routing well, you may want it on your personal site or in a course
+page too. Copying the file there would start a second version that drifts from the first.
+Instead, the figure stays in your project, which publishes it on a page of its own, and the
+other site frames that page. An improvement then reaches both places with one deployment.
+
+The starter already publishes the routing figure this way.
+[Open the same routing figure on its own](/figures/routing/): it has the same model and controls
+as the figure at the top of this guide, because both pages render the same file.
 
 <Accordion title="Publish a figure for another website">
 
@@ -143,19 +215,23 @@ Add an entry for the figure to `app/src/content/figures.json`, next to the exist
   "my-figure": {
     "src": "d3-routing.html",
     "title": "A token chooses its experts",
-    "description": "Illustrative scores and normalized routing weights.",
+    "description": "Illustrative scores and routing weights.",
     "lang": "en"
   }
 }
 ```
 
 Replacing the whole file instead removes the other figures' pages. Build the site, and the page
-appears at `/figures/my-figure/`. The optional `"frameless": true` lets a figure supply its own
-heading and card. The registry accepts only these presentation fields, not `data` or `config`,
-so a standalone figure must work with the defaults in its own source. Register a figure only
-when another site will show it; a figure used only in the article needs no entry.
+appears at `/figures/my-figure/`. The four fields shown are required, and `lang` declares the
+page's language. The optional `"frameless": true` lets a figure supply its own heading and card.
+The registry accepts only these presentation fields, not `data` or `config`, so a standalone
+figure must work with the defaults in its own source.
 
-Once the site is deployed, another website can show the figure with an iframe:
+Register a figure only when another site will show it; a figure used only in the article needs
+no entry. The starter registers three figures, and each one is published even if your article
+never uses it, so remove the entries you do not want, along with their tests.
+
+Once the site is deployed, another website shows the figure with an iframe:
 
 ```html
 <iframe
@@ -166,14 +242,15 @@ Once the site is deployed, another website can show the figure with an iframe:
 ></iframe>
 ```
 
-Replace `YOUR-ARTICLE-HOST` with the origin of your deployment, and test the height at desktop
-and phone widths, because the iframe keeps the height you give it. The figure follows its own
-theme rather than the host page's, and the server hosting your article must allow framing.
-When a paper needs a figure that never changes, link to a versioned deployment that you keep
-online.
+In React or another JSX framework, write the `style` as an object, such as
+`style={{ width: "100%", height: 680, border: 0 }}`. Replace `YOUR-ARTICLE-HOST` with the origin
+of your deployment, and test the height at desktop and phone widths, because the iframe keeps
+the height you give it. The figure follows its own theme rather than the host page's, and the
+server hosting your article must allow framing. When a paper needs a figure that never changes,
+link to a versioned deployment that you keep online.
 
 </Accordion>
 
-Every figure so far has run in your preview, on your machine, with the controls in your hands.
-A reader gets something else: a deployed website, or a PDF with no controls at all. How do you
-check what they will receive before you send it?
+So far, every version of the figure has run in your preview, on your machine. Readers get
+something else: a deployed website, or a PDF with no controls at all. The last chapter checks
+what they receive before you send it.

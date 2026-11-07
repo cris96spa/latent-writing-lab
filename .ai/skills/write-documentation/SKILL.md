@@ -52,9 +52,9 @@ deserve.
 | ------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------- |
 | Landing page (`README.md`)                                          | What is this, and how do I start?                 | what it is, then the shortest path to a run | only the quick-start commands; everything else is a link                         |
 | Tutorial (the guide's first-article walkthrough)                    | Can I get something working?                      | the result the reader will have             | central: complete files to copy, with a visible result after each step           |
-| How-to guide (guide chapters, `workflow.md`, `integration.md`)      | How do I do this?                                 | the task and its result                     | central: a working command or snippet, explained as the reader uses it           |
-| Reference (`authoring.md`, `verification.md`, frontmatter fields)   | What exactly does this accept or check?           | the contract                                | complete: every field, command and default, and what it does not cover           |
-| Explanation (`architecture.md`, `baseline.md`, `research.md`)       | How does this work, and why this way?             | the problem and the idea that solves it     | a detail: name a file or field only where the reader needs a handle on it        |
+| How-to guide (the guide's chapters)                                 | How do I do this?                                 | the task and its result                     | central: a working command or snippet, explained as the reader uses it           |
+| Reference (`docs/reference.md`, frontmatter fields)                 | What exactly does this accept or check?           | the contract                                | complete: every field, command and default, and what it does not cover           |
+| Explanation (`docs/how-it-works.md`)                                | How does this work, and why this way?             | the problem and the idea that solves it     | a detail: name a file or field only where the reader needs a handle on it        |
 | Figure title and caption (`HtmlEmbed` `title` and `desc`, registry) | What am I looking at, and can I trust it?         | the claim the figure supports               | none; state the data source, and say when values are illustrative                |
 | Agent instructions (`AGENTS.md`, `CLAUDE.md`, `.ai/skills/`)        | What must I do or avoid here?                     | the rule, with its reason when not obvious  | paths and commands exactly as they are typed                                     |
 | Pull request description                                            | What changes, why, and what should I look at?     | the motivation and the design               | rarely: a snippet earns its place only as the clearest statement of an interface |
@@ -80,10 +80,13 @@ without adding understanding.
 The documentation has two surfaces with different readers. The interactive guide, served by
 `make doc`, is for authors writing an article: it runs on the article engine, so it can show
 live figures next to the instructions that use them. Tutorials and how-to guides about
-writing, figures and publishing belong there. The Markdown pages in `docs/` are for people
-maintaining the workspace and for anyone browsing the repository on GitHub, who can read them
-without installing anything. Architecture, conventions, checks, provenance and integration
-contracts belong there. `README.md` introduces the project and points to both.
+writing, figures, conventions and publishing belong there. The Markdown pages in `docs/` are
+for people running or changing the kit and for anyone browsing the repository on GitHub, who
+can read them without installing anything. There are two: `how-it-works.md` is the one
+explanation, a narrative that follows one figure through every piece of the kit, and
+`reference.md` holds the commands, checks, CI, engine updates and documentation procedures.
+Add to one of them before adding a page. `README.md` introduces the project and points to all
+three.
 
 Give each fact one home, chosen by the reader who needs it, and link to it from anywhere else
 it matters. Two copies of a port number, a file path or a procedure drift apart, and the reader
@@ -249,8 +252,8 @@ A few habits make prose easier to follow:
   section or a decision; a run of rhetorical questions reads as stalling.
 - Leave out "simply", "just", "easy" and "obviously". They add nothing for a reader who
   succeeds and tell a reader who struggles that the fault is theirs.
-- Make link text say where it goes: `see the [embedding contract](integration.md)`, not
-  `click [here](integration.md)`. Readers scan links, and screen readers list them out of
+- Make link text say where it goes: `see the [engine update procedure](reference.md#update-the-engine)`, not
+  `click [here](reference.md#update-the-engine)`. Readers scan links, and screen readers list them out of
   context.
 - Split a sentence that needs parentheses, stacked qualifications or a chain of semicolons
   into two.
@@ -345,9 +348,10 @@ The guide and the article share the template's components, and each one has a jo
   and source.
 
 Some guide text is a test fixture. `e2e/docs.spec.ts` checks the guide's title, the title of
-the first-article accordion and its import line, the figure ids `guide-function` and
-`guide-routing`, and the text of the link to the standalone routing figure. Change the test
-in the same commit when you change any of them.
+the first-article heading and its import line, the setup accordion's title, the figure ids
+`guide-rules` and `guide-routing`, the rule button labels in
+`docs/embeds/guide-three-rules.html`, and the text of the link to the standalone routing
+figure. Change the test in the same commit when you change any of them.
 
 ## Structure and length
 
@@ -382,8 +386,8 @@ opens with the purpose and lets the details follow from it:
 > controls and keep their mathematical invariants, in both themes and on a phone-sized
 > screen.
 
-The rewrite drops the delegation detail, which belongs in the [architecture
-page](../../../docs/architecture.md), and adds the reasoning that the original left out.
+The rewrite drops the delegation detail, which belongs in [How it
+works](../../../docs/how-it-works.md), and adds the reasoning that the original left out.
 
 ## Before you publish
 

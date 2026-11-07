@@ -1,110 +1,167 @@
----
-title: Latent Writing Lab
-emoji: 📝
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-app_port: 8080
-tags:
-  - research-article-template
-  - scientific-writing
----
+<div align="center">
 
 # Latent Writing Lab
 
-Latent Writing Lab is a workspace for writing a research article or technical explainer in
-Markdown, with equations, citations and interactive figures, and publishing it as a static
-website or a PDF. It runs on Thibaud Frere's
-[research-article-template](https://github.com/tfrere/research-article-template), which
-supplies the layout, theming, citations and exporters, and it keeps that engine unmodified so
-upstream updates stay reviewable. On top of the engine, the workspace adds standalone figure
-pages that other websites can embed, an interactive guide built with the same engine, and
-checks that run locally and in CI.
+### Research articles your readers can play with.
+
+Write in Markdown. Add figures readers can operate.<br/>
+Ship a website, a PDF and figures that embed anywhere.
+
+[![Checks](https://img.shields.io/github/actions/workflow/status/cris96spa/latent-writing-lab/check.yml?branch=development&style=flat-square&label=checks)](https://github.com/cris96spa/latent-writing-lab/actions/workflows/check.yml)
+[![Guide](https://img.shields.io/badge/guide-read%20online-E07A47?style=flat-square)](https://cris96spa.github.io/latent-writing-lab/)
+[![Node](https://img.shields.io/badge/node-%E2%89%A522.12-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Astro](https://img.shields.io/badge/Astro-4-BC52EE?style=flat-square&logo=astro&logoColor=white)](https://astro.build/)
+[![Engine](https://img.shields.io/badge/engine-research--article--template-FFD21E?style=flat-square&logo=huggingface&logoColor=black)](https://github.com/tfrere/research-article-template)
+
+[**Read the guide →**](https://cris96spa.github.io/latent-writing-lab/) &nbsp;·&nbsp; [Quick start](#quick-start) &nbsp;·&nbsp; [How it works](#how-it-works) &nbsp;·&nbsp; [Your own article](#write-your-own-article)
+
+<br/>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero-dark.gif">
+  <img src="docs/images/hero-light.gif" width="820" alt="A reel of interactive figures rendered by the engine: an embedding map of research papers, attention architecture diagrams, a neural network classifying a hand-drawn digit, a data-flow Sankey, a GPU bandwidth explorer, benchmark heatmaps and a mixture-of-experts router with sliders">
+</picture>
+
+<sub>Every figure above is live in the demo article and the guide. Readers hover, draw, drag and switch, right in the page.</sub>
+
+</div>
+
+<br/>
+
+## Why
+
+A paper states its result and asks you to believe it. An interactive article hands you the knob.
+
+Hugging Face's long-form research posts, like the
+[Smol Training Playbook](https://huggingface.co/spaces/HuggingFaceTB/smol-training-playbook),
+the [LLM Evaluation Guidebook](https://huggingface.co/spaces/OpenEvals/evaluation-guidebook)
+and the [MoE Training Handbook](https://huggingface.co/spaces/huggingface/moe-blogpost), read
+like books and behave like notebooks: prose, equations and citations next to figures you can
+operate. All three run on Thibaud Frere's
+[research-article-template](https://github.com/tfrere/research-article-template).
+
+**Latent Writing Lab is the starter kit for writing your own.** Create a repository from it,
+write, and publish. Everything an article needs is ready: a hands-on guide, figures to start
+from, embeddable figure pages, PDF export, and browser tests that catch a broken figure before
+your readers do.
+
+## Features
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+**✍️ Write in Markdown**<br/>
+Chapters in MDX with LaTeX math, BibTeX citations, footnotes, notes and sidenotes.
+
+</td>
+<td width="33%" valign="top">
+
+**🎛️ Figures readers operate**<br/>
+Each figure is one HTML file with D3, SVG, sliders and buttons. Start from working examples.
+
+</td>
+<td width="33%" valign="top">
+
+**🔗 Embed anywhere**<br/>
+Any figure can get its own page, ready to drop into another site with an iframe.
+
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
+
+**📄 Website and PDF**<br/>
+One build gives a static site in light and dark, a PDF and LaTeX, with figures captured for print.
+
+</td>
+<td width="33%" valign="top">
+
+**✅ Tested like code**<br/>
+Browser tests operate your figures in both themes and at phone width, on every push.
+
+</td>
+<td width="33%" valign="top">
+
+**🤖 Agent-ready**<br/>
+`AGENTS.md` and skills teach coding agents the conventions, from figure code to prose style.
+
+</td>
+</tr>
+</table>
 
 ## Quick start
 
-You need Git, Node.js 22.12 or later, and npm; CI tests Node 22 and 24. Run every command
-from the repository root. Install the dependencies and start the article preview:
+You need [Node.js](https://nodejs.org/) 22.12 or later.
 
 ```sh
+git clone https://github.com/cris96spa/latent-writing-lab.git && cd latent-writing-lab
 npm ci
 npm run dev
 ```
 
-Open <http://127.0.0.1:4321/>. You should see the template's demonstration article, which
-shows every component the engine provides. If port 4321 is taken, Astro prints the port it
-chose instead. The page reloads whenever you save a file.
+Open <http://127.0.0.1:4321> for the demo article, which shows every component the engine
+offers. To read the guide next to it, run `make doc` in a second terminal and open
+<http://127.0.0.1:8031>.
 
-The interactive guide shows how to replace the demonstration with your own article. Start it
-in a second terminal:
+## How it works
 
-```sh
-make doc
-```
+You write chapters and figures. One entry file, `article.mdx`, decides what goes into the
+article, and the build turns it into everything your readers get.
 
-Open <http://127.0.0.1:8031/>. The guide walks through creating a project, writing a first
-article, adding figures and data, and publishing, with live examples beside the instructions.
-Without Make, run `npm run docs:dev`.
+<div align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/rules-dark.gif">
+  <img src="docs/images/rules-light.gif" width="620" alt="A diagram of chapters and a figure flowing into article.mdx, then into a build that produces a website, a PDF and a figure page, highlighting each of three rules in turn">
+</picture>
+</div>
 
-## Where things live
+Three rules keep it predictable:
 
-You write in `app/src/content/`. The rest of `app/` is the template's engine, which the
-workspace uses as it is.
+- **What you import is what you publish.** A chapter ships only when `article.mdx` imports it.
+- **Each figure has one source.** The same HTML file feeds the article and the figure's own
+  page, so one fix reaches both.
+- **Readers get the build.** Checks and exports run on the static site, not your local preview.
 
-| Path                                                  | Contents                                                   |
-| ----------------------------------------------------- | ---------------------------------------------------------- |
-| `app/src/content/article.mdx`                         | Article metadata and the list of chapters, in order        |
-| `app/src/content/chapters/`                           | Chapters in MDX: prose, math and component imports         |
-| `app/src/content/bibliography.bib`                    | BibTeX references cited from chapters                      |
-| `app/src/content/embeds/`                             | Figures, one HTML file each                                |
-| `app/src/content/assets/data/`                        | Datasets and their source notes, served at `/data/`        |
-| `app/src/content/figures.json`                        | Figures published as standalone pages                      |
-| `app/src/components/`, `app/plugins/`, `app/scripts/` | The template's rendering, citation and export engine       |
-| `app/src/pages/figures/`                              | The standalone figure page, built on the template's embeds |
-| `docs/`                                               | The interactive guide and the maintainer documentation     |
-| `tools/`, `e2e/`                                      | Project checks and browser tests                           |
-| `.ai/skills/`                                         | Instructions for coding agents                             |
-| `app/dist/`                                           | The generated website and exports; never edit it           |
+## Write your own article
+
+1. Click **Use this template** to create a repository for your article.
+2. Clone it, then run `npm ci` and `npm run dev`.
+3. Replace the demo with your first chapter: the guide's
+   [Start your own project](https://cris96spa.github.io/latent-writing-lab/#start-your-own-project)
+   section does it in two files.
+4. Run `npm run check` and `npm run test:e2e`, then deploy `app/dist` to any static host, a
+   Hugging Face Space or the included Docker image.
+
+<details>
+<summary><b>Where things live</b></summary>
+<br/>
+
+| Path                                          | What it holds                                       |
+| --------------------------------------------- | --------------------------------------------------- |
+| `app/src/content/article.mdx`                 | Article metadata and the chapters, in reading order |
+| `app/src/content/chapters/`                   | Your chapters                                       |
+| `app/src/content/embeds/`                     | Your figures, one HTML file each                    |
+| `app/src/content/bibliography.bib`            | Your references                                     |
+| `app/src/content/assets/`                     | Images, audio and datasets                          |
+| `app/src/content/figures.json`                | Figures that get their own embeddable page          |
+| `app/src/components/`, `plugins/`, `scripts/` | The template's engine; no need to touch it          |
+| `docs/`                                       | The guide and the maintainer documentation          |
+| `tools/`, `e2e/`                              | Checks and browser tests                            |
+
+</details>
 
 ## Documentation
 
-| To                                                       | Read                                                                    |
-| -------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Write a first article, add figures and publish           | The interactive guide (`make doc`), with its source in `docs/chapters/` |
-| Follow the conventions for chapters, sources and figures | [Authoring conventions](docs/authoring.md)                              |
-| Organize repositories, drafts and releases               | [Project and publishing workflow](docs/workflow.md)                     |
-| Embed a figure in another website                        | [Reuse a figure on another website](docs/integration.md)                |
-| Understand how the workspace fits together               | [Architecture](docs/architecture.md)                                    |
-| Know what each check covers                              | [Verification](docs/verification.md)                                    |
-| Update the template or check its provenance              | [Upstream and provenance](docs/baseline.md)                             |
-| Edit the guide or these pages                            | [Documentation](docs/documentation.md)                                  |
-| See why figures are native HTML embeds                   | [Research note](docs/research.md)                                       |
+- **[The guide](https://cris96spa.github.io/latent-writing-lab/)**: from a new repository to a
+  published article, with live figures. Start here to write.
+- **[How it works](docs/how-it-works.md)**: follow one figure from an HTML file to every page
+  that shows it, and see why each piece exists.
+- **[Reference](docs/reference.md)**: every command and check, CI, engine updates and work on
+  the docs.
 
-Coding agents follow [AGENTS.md](AGENTS.md), which `CLAUDE.md` links to, and the skills in
-[.ai/skills](.ai/skills/), including the [writing skill](.ai/skills/write-documentation/SKILL.md)
-for documentation.
+## Credits
 
-## Check a change
-
-The browser tests run against production builds of both the article and the guide, so build
-both before testing. Install Chromium once with `npx playwright install chromium`, then run:
-
-```sh
-npm run check
-make doc-check
-npm run test:e2e
-```
-
-`npm run check` confirms that the template files match their pinned versions, that project
-files are formatted, and that the article builds. `make doc-check` checks documentation links
-and builds the guide. `npm run test:e2e` tests both sites in Chromium. CI runs the same steps
-on Node 22 and 24 and keeps the builds as artifacts; it never deploys. The
-[verification page](docs/verification.md) lists what each check proves, and the guide's
-**Review and publish** section covers exports and hosting.
-
-## License
-
-The template's code and demonstration content keep their CC BY 4.0 license, reproduced in
-[LICENSE](LICENSE), and their attribution. `template-provenance.json` pins the template
-revision this workspace uses; [Upstream and provenance](docs/baseline.md) explains what is
-upstream and what is local.
+The article engine, its components and the demo content are Thibaud Frere's
+[research-article-template](https://github.com/tfrere/research-article-template), licensed under
+[CC BY 4.0](LICENSE). Demo figures keep their attribution in their captions.

@@ -142,7 +142,8 @@
       },
     ];
     // Two layouts in view-box units: left to right when wide, in rows when narrow. `route`
-    // fixes the direction of an edge where the automatic choice would cross another one.
+    // fixes the direction of an edge where the automatic choice would cross another one:
+    // "h" runs side to side, "v" bottom to top, and "hv" leaves sideways and enters vertically.
     const LAYOUTS = {
       wide: {
         size: [820, 316],
@@ -160,7 +161,9 @@
           page: [640, 250],
         },
         widths: { site: 170, pdf: 170, page: 170 },
-        route: { "figure-build": "v" },
+        // The figure's edge to the build leaves sideways below its edge to the entry file, then
+        // turns up into the build, so the two never cross.
+        route: { "figure-build": "hv" },
       },
       narrow: {
         size: [360, 414],
@@ -209,19 +212,20 @@
         const [ac, bc] = [center(a), center(b)];
         const auto = Math.abs(bc[0] - ac[0]) > Math.abs(bc[1] - ac[1]) * 1.4 ? "h" : "v";
         const flow = (layout.route && layout.route[edge.id]) || auto;
-        const forward = flow === "h" ? bc[0] > ac[0] : bc[1] > ac[1];
-        const [fromSide, toSide] =
-          flow === "h"
-            ? forward
-              ? ["right", "left"]
-              : ["left", "right"]
-            : forward
-              ? ["bottom", "top"]
-              : ["top", "bottom"];
+        const right = bc[0] > ac[0];
+        const down = bc[1] > ac[1];
+        const sidesFor = {
+          h: right ? ["right", "left"] : ["left", "right"],
+          v: down ? ["bottom", "top"] : ["top", "bottom"],
+          hv: [right ? "right" : "left", down ? "top" : "bottom"],
+        };
+        const [fromSide, toSide] = sidesFor[flow];
+        // An elbow edge is ordered on its sides by its corner, which is where it turns.
+        const corner = [bc[0], ac[1]];
         const plan = { edge, flow, ends: [] };
         for (const [id, side, other] of [
-          [edge.from, fromSide, bc],
-          [edge.to, toSide, ac],
+          [edge.from, fromSide, flow === "hv" ? corner : bc],
+          [edge.to, toSide, flow === "hv" ? corner : ac],
         ]) {
           const key = `${id}:${side}`;
           if (!sides.has(key)) sides.set(key, []);
@@ -247,9 +251,18 @@
       for (const { edge, flow, ends } of plans) {
         const p0 = anchor(ends[0], 0);
         const p3 = anchor(ends[1], 4);
-        const p1 = flow === "h" ? [(p0[0] + p3[0]) / 2, p0[1]] : [p0[0], (p0[1] + p3[1]) / 2];
-        const p2 = flow === "h" ? [(p0[0] + p3[0]) / 2, p3[1]] : [p3[0], (p0[1] + p3[1]) / 2];
-        const mid = [0, 1].map((k) => (p0[k] + 3 * p1[k] + 3 * p2[k] + p3[k]) / 8);
+        let p1;
+        let p2;
+        let mid;
+        if (flow === "hv") {
+          // Both control points at the corner give a rounded L; the label sits on the run.
+          p1 = p2 = [p3[0], p0[1]];
+          mid = [(p0[0] + p3[0]) / 2 - 40, p0[1]];
+        } else {
+          p1 = flow === "h" ? [(p0[0] + p3[0]) / 2, p0[1]] : [p0[0], (p0[1] + p3[1]) / 2];
+          p2 = flow === "h" ? [(p0[0] + p3[0]) / 2, p3[1]] : [p3[0], (p0[1] + p3[1]) / 2];
+          mid = [0, 1].map((k) => (p0[k] + 3 * p1[k] + 3 * p2[k] + p3[k]) / 8);
+        }
         routes.set(edge.id, { d: `M${p0}C${p1} ${p2} ${p3}`, mid });
       }
       return routes;

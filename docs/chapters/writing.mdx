@@ -4,28 +4,63 @@ import Glossary from "../../components/Glossary.astro";
 import Image from "../../components/Image.astro";
 import vocabulary from "../assets/image/visual-vocabulary-poster.png";
 
-## Write the chapters
+## Write the explanation
 
-A chapter holds them by being written in <Glossary term="MDX" definition="Markdown that can import and render components." />:
-paragraphs, headings, lists and links are plain Markdown, and anything Markdown cannot
-express, such as an aside, a captioned image or a figure, is a component that you import from
-the template and place like an HTML tag. The template does the rest. It numbers the figures,
-builds the table of contents from your headings and collects the references at the end.
+Your chapter is written in <Glossary term="MDX" definition="Markdown that can import and render components." />:
+paragraphs, headings, lists and links are plain Markdown, and anything Markdown cannot express,
+such as a callout, a captioned image or a figure, is a component you import from the template
+and place like an HTML tag. The engine does the rest. It numbers the figures, builds the table of
+contents from your headings and collects the references at the end.
 
-Split a long article into chapters when it helps you edit and review one section at a time.
-The chapters still form one article: they cite from one bibliography and appear in the order
-the entry file places them. That order is the first rule at work again, and so is its
-consequence for drafts.
+Three additions answer the reader's questions from the end of the last chapter: a source for the
+claim, a warning about which numbers are real, and the reasoning behind what the figure shows.
+The first two take one line and one component:
+
+```mdx
+import HtmlEmbed from "../../components/HtmlEmbed.astro";
+import Note from "../../components/Note.astro";
+
+## The router's rule
+
+A mixture-of-experts layer sends each token to only a few
+of its experts [@hf-moe]. A router scores every expert, ...
+
+<Note title="The scores are illustrative" variant="info">
+  The scores show the mechanism; no trained model made them.
+</Note>
+```
+
+`[@hf-moe]` cites a record in `app/src/content/bibliography.bib`, which the starter includes;
+the engine turns it into "(Hugging Face, n.d.)" with a link to a reference list at the end of
+the page. For a source of your own, add its BibTeX record to that file, copying the DOI and
+other metadata from the source itself rather than reconstructing them, and cite it by its key.
+Any chapter can cite any record. The `Note` sits above the figure, where a reader looks before
+trusting the numbers, and its title states the point, so a reader who skims still gets it.
+
+The same care applies to everything a reader will take as fact. Every author, affiliation,
+source and measurement must be real and checked, and when a value is invented to illustrate a
+mechanism, the text or the caption says so, as your article does twice.
+
+The third addition, the reasoning, is ordinary prose: start each section at `##`, because the
+article title is the page's only top-level heading, and write the explanation the figure
+supports. A longer article splits into several chapters, each imported by the entry file in
+reading order, and all of them cite from the same bibliography. That lets you draft a
+section in its own file, and the first rule says what happens to it.
 
 <Note title="Everything you import is published" variant="danger">
-  The engine has no draft flag. A half-written chapter that the entry file imports is built and
-  deployed with the rest, so keep it out of the imports until it is ready to be read, and keep a
+  The engine has no draft flag. A half-written chapter that the
+  entry file imports is built and deployed with the rest, so keep it
+  out of the imports until it is ready to be read, and keep a
   visible draft label in the article while it is under review.
 </Note>
 
-Start each chapter's sections at `##`, because the template renders the article title as the
-page's only top-level heading. Choosing a component is the next decision, and it depends on
-what the content does for the argument rather than on how it should look.
+A chapter can also run code. An import or an expression in MDX executes when the site builds,
+so review chapter changes as carefully as you would review code. Write the prose and figure
+labels in your article's language; the template's own interface, such as its buttons and table
+of contents, stays in English unless you change the engine.
+
+Which component to reach for depends on what the content does for the argument, not on how it
+should look.
 
 <Accordion title="Choose a component for what you need to say">
 
@@ -45,27 +80,15 @@ what the content does for the argument rather than on how it should look.
 | Audio or an externally hosted app                     | Native `<audio>` or a titled `<iframe>`       |
 
 A chapter directly inside `chapters/` imports a component from `../../components/Name.astro`,
-and a chapter one folder deeper needs one more `../`:
-
-```mdx
-import Note from "../../components/Note.astro";
-import Accordion from "../../components/Accordion.astro";
-
-<Note title="These values are illustrative" variant="info">
-  The scores come from no trained model.
-</Note>
-
-<Accordion title="Why illustrative values?">Put the supporting explanation here.</Accordion>
-```
-
-Give a `Note` a title that states its point, as the example does, rather than "Note". The
-demonstration article shows every component in use, and its source is in
-`app/src/content/chapters/demo/components.mdx` and `markdown.mdx`.
+and a chapter one folder deeper needs one more `../`. The demonstration article shows every
+component in use; its source is in `app/src/content/chapters/demo/components.mdx` and
+`markdown.mdx`.
 
 </Accordion>
 
-An image is the simplest evidence a chapter can carry. The `Image` component below optimizes
-the file, adds the caption and lets readers select the image to zoom in.
+When the reader does not need to vary anything, an image is the simplest evidence a chapter can
+carry. The `Image` component optimizes the file, adds the caption and lets readers select the
+image to zoom in:
 
 <Image
   src={vocabulary}
@@ -73,10 +96,7 @@ the file, adds the caption and lets readers select the image to zoom in.
   caption="Visual Vocabulary, Financial Times. Image included in the upstream template."
 />
 
-Images, equations and citations each have a convention that keeps them working in every
-output, from the website to the PDF.
-
-<Accordion title="Add images, equations and sources">
+<Accordion title="Add images, math, links, footnotes and audio">
 
 Put images in `app/src/content/assets/image/` and import them, so the build can optimize them.
 Give each one alt text that conveys its information, for readers who cannot see it, and a
@@ -86,20 +106,20 @@ caption that states its role and source:
 import Image from "../../components/Image.astro";
 import picture from "../assets/image/placeholder.png";
 
-<Image src={picture} alt="Describe the information shown" caption="Explain and credit the image." />
+<Image
+  src={picture}
+  alt="Describe the information shown"
+  caption="Explain and credit the image."
+/>
 ```
 
 Write inline math between single dollar signs, `$...$`, and display math between double ones,
 `$$...$$`. KaTeX renders it and supports most but not all LaTeX commands, so check anything
 beyond the basics in the preview. Code fences display code; they never run it.
 
-To cite a source, add its BibTeX record to `app/src/content/bibliography.bib` and write
-`[@your-key]` in the text. `[@hf-moe]` is an included example, and any chapter can cite any
-record. Copy the DOI and other metadata from the source itself rather than reconstructing them.
-
 To link to a figure, give it a unique `id` and link to `#your-id`, as in
-`[the example](#your-id)`. Markdown footnotes hold supporting context, and the `article`
-layout collects them with the references.
+`[the example](#your-id)`. Markdown footnotes hold supporting context, and the `article` layout
+collects them with the references.
 
 For audio, import a file from `../assets/audio/`, place it with
 `<audio controls src={audioUrl} />` and provide a transcript. For an iframe, give it a
@@ -121,8 +141,8 @@ For LaTeX, install Pandoc and place `main.tex`, `main.bib` and the related secti
 npm run latex:convert
 ```
 
-For other paths, see `npm run latex:convert -- --help`. Review the equation macros,
-references, images and component imports in the result.
+For other paths, see `npm run latex:convert -- --help`. Review the equation macros, references,
+images and component imports in the result.
 
 For Notion, give an integration access to the page, set `NOTION_TOKEN` and `NOTION_PAGE_ID` in
 your shell environment, and run `npm run notion:import`. Never commit the token. The importer
@@ -134,5 +154,6 @@ your edits instead of merging with them.
 
 </Accordion>
 
-Prose, equations and sources can state a claim and support it, but the reader still has to
-believe the sentence that describes the mechanism. How do you let them test it instead?
+Your article now explains its claim and says where it comes from. The figure, though, is still
+something you borrowed: you placed it with one tag and never looked inside. To build figures of
+your own, you need to know what is in that file.

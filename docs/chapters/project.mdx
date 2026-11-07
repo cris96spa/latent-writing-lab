@@ -1,21 +1,13 @@
 import Accordion from "../../components/Accordion.astro";
-import Note from "../../components/Note.astro";
 
-## Start your own project
+## Start with two files
 
-It takes a repository of your own and two files. The repository holds one article: its
-chapters share references and figures and are released together. On GitHub, choose **Use
-this template → Create a new repository** on the starter's page, then clone your copy. The
-template gives your project a history of its own. Fork the starter instead only when you
-want to contribute changes back to it, since a fork stays tied to the starter's history.
+Each article gets a repository of its own. On GitHub, open the starter's page and choose **Use
+this template → Create a new repository**, then clone your copy and start the preview. The
+template gives your project the starter's files with a history of its own; fork the starter
+instead only when you want to send changes back to it.
 
-<Note title="A new section is a chapter, not a project" variant="info">
-  Create another repository only for an article you publish separately. A section of the same
-  article is another chapter, and a draft or a revision of it is a branch. Adding a chapter extends
-  the article at `/`; it never creates a second article URL.
-</Note>
-
-<Accordion title="First time here? Set up the tools and project">
+<Accordion title="First time here? Set up the tools and the preview">
 
 You need Git and Node.js 22.12 or later. npm comes with Node, and the project is tested on
 Node 22 and 24. On Windows, work inside WSL, which keeps the repository's symbolic links
@@ -40,57 +32,66 @@ The last command keeps running and ends its startup with the address of the prev
 ┃ Local    http://127.0.0.1:4321/
 ```
 
-Open that address. You should see the template's demonstration article, "Bringing paper to
-life", which shows every component the engine offers. When port 4321 is taken, Astro prints
-`Port 4321 is in use, trying another one...` and the address it picked instead. It also
-prints two `[WARN] [content]` lines about `article.mdx` and `figures.json` on every start;
-the template produces them, and the article builds and renders normally. Keep the terminal
-open while you write, because saving a file refreshes the page.
+When port 4321 is taken, Astro prints `Port 4321 is in use, trying another one...` and the
+address it picked instead. It also prints two `[WARN] [content]` lines about `article.mdx` and
+`figures.json` on every start; the template produces them, and the article builds normally.
+Keep the terminal open while you write, because saving a file refreshes the page.
 
-If the starter's GitHub page has no **Use this template** button, its owner must enable
-**Template repository** in the settings. You can also create an empty repository and copy the
-starter's tracked files into it, leaving out `.git`, `node_modules` and generated output.
+If the starter's page has no **Use this template** button, its owner must enable **Template
+repository** in the settings. You can also create an empty repository and copy the starter's
+tracked files into it, leaving out `.git`, `node_modules` and generated output.
 
 </Accordion>
 
-The demonstration is useful to browse, but it is not your article, and replacing it is where
-the first rule comes in: **what you import is what you publish**. One file,
-`app/src/content/article.mdx`, defines the article. Its frontmatter, the YAML block at the
-top, holds the title and other metadata. Its body imports chapters from
-`app/src/content/chapters/` and places them in reading order, so changing those imports
-changes the article. A first article therefore needs two files: a chapter, and an entry file
-that imports only that chapter.
+The preview at [http://127.0.0.1:4321/](http://127.0.0.1:4321/) shows the template's demonstration article, "Bringing
+paper to life", which uses every component the engine offers. It is worth browsing, but it is
+not your article, and replacing it is where the first rule comes in: **what you import is what
+you publish**. The file `app/src/content/article.mdx` defines the article. Its frontmatter, the
+YAML block at the top, holds the title and other metadata, and its body imports chapters from
+`app/src/content/chapters/` in reading order. The article is exactly what those imports name.
 
-<Accordion title="Make a first article you can run">
+A repository holds one article, so a new section of your article is another chapter, and a draft
+or revision is a branch. Create another repository only for an article you publish separately.
 
-Create `app/src/content/chapters/my-article.mdx` with this content:
+### Make a first article you can run
+
+Your first article is one chapter and an entry file that imports only that chapter. Create
+`app/src/content/chapters/my-article.mdx`:
 
 ```mdx
 import HtmlEmbed from "../../components/HtmlEmbed.astro";
 
-## What changes when frequency doubles?
+## The router's rule
 
-A sine wave repeats. Its frequency determines how many oscillations fit into an
-interval. Compare $f(x)=\sin(x)$ with $g(x)=\sin(2x)$.
+A mixture-of-experts layer sends each token to only a few
+of its experts. A router scores every expert, keeps the $k$
+highest scores $s_i$, and turns them into weights with a
+softmax at temperature $T$:
+
+$$
+w_i = \frac{e^{s_i/T}}{\sum_{j \in \text{top-}k} e^{s_j/T}}
+$$
 
 <HtmlEmbed
-  src="d3-equation-editor.html"
-  title="Double the frequency"
-  desc="Try sin(x), then sin(2*x). Upstream demo by Thibaud Frere."
+  src="d3-routing.html"
+  title="Raise the temperature"
+  desc="Illustrative scores, not measurements from a trained model."
 />
 
-## What the curve shows
+## What temperature does
 
-Enter sin(x), then sin(2\*x). The second curve makes twice as many oscillations
-in the same interval. Its amplitude stays the same.
+Raise the temperature and the weights of the chosen experts
+move closer together. Their order never changes, because
+dividing every score by the same $T$ keeps the largest score
+the largest.
 ```
 
 Then replace all of `app/src/content/article.mdx` with:
 
 ```mdx
 ---
-title: "What changes when frequency doubles?"
-description: "An explanation you can test with a curve."
+title: "How a router splits a token"
+description: "A router, explained with a figure you can operate."
 authors: []
 template: "paper"
 showPdf: false
@@ -101,24 +102,19 @@ import MyArticle from "./chapters/my-article.mdx";
 <MyArticle />
 ```
 
-Save both files and return to the preview. You should see your question as the title, the
-two equations and the function plotter. Change a sentence and save again: the page updates.
+Save both files and return to the preview. The page shows your title, the equation and the
+routing figure, and it responds to its sliders as it does in this guide. The demonstration's
+chapters are still in `chapters/demo/`, but they are not part of the article, because the entry
+file does not import them. Nothing else decides what is published.
 
-The demonstration chapters stay in `chapters/demo/` as examples, but they are not part of your
-article, because the entry file does not import them. Add your author information once you
-have checked it.
+The `paper` layout you chose centers a short explanation under a banner. Before you share the
+article, its metadata needs to be yours.
 
-</Accordion>
-
-The result is an article in the `paper` layout, which centers a short explanation. Before you
-share it, the metadata needs to be yours: the demonstration's author and its sample DOI are
-examples, not your attribution.
-
-<Accordion title="Choose a layout and make the project yours">
+<Accordion title="Choose a layout and fill in the metadata">
 
 The `template` field chooses the layout. `paper` suits a short explanation, while `article`
-adds a table of contents in the sidebar and the full presentation of the demonstration. Both
-show the banner from `app/src/content/embeds/banner.html`, which you can edit like any figure.
+adds a table of contents in the sidebar, as in this guide. Both show the banner from
+`app/src/content/embeds/banner.html`, which you can edit like any figure.
 
 The frontmatter also accepts `subtitle`, `authors`, `affiliations`, `published`, `doi`,
 `licence` and `showPdf`. Leave out any date or DOI you do not have. Authors refer to their
@@ -138,12 +134,12 @@ PDF is deployed with the site. The upstream frontmatter skill,
 `.ai/skills/article-frontmatter/SKILL.md`, lists every field with its default.
 
 Before sharing the project, rename it in the root `README.md` and `package.json`. Keep the
-upstream licenses and credits, and keep the `research-article-template` tag in the README
-metadata, which lists the project in the Hugging Face gallery of template articles. Choose
-your own license only for work you own.
+upstream licenses and credits, and choose your own license only for work you own. To host the
+article on Hugging Face, the README also needs the Space settings shown in
+[Check, build and publish](#check-build-and-publish).
 
 </Accordion>
 
-Your article has a title, two equations and a figure, all from one chapter. A real
-explanation needs sections, sources, images and asides that stay out of the argument's way.
-How does a chapter hold them?
+The article runs, but it does not yet explain much. A reader who moves the slider will want to
+know where the claim comes from, which numbers are real and why the order never changes. Those
+answers are prose, and the next chapter adds them.
