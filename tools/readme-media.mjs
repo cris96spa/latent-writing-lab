@@ -1,4 +1,4 @@
-// Records the README's animations from the built article and guide, in light and dark themes.
+// Records the README's animations from the built article and documentation, in light and dark themes.
 // Build both first (`npm run build` and `make doc-build`), then run `npm run readme:media`.
 import { spawn } from "node:child_process";
 import { writeFile } from "node:fs/promises";
@@ -7,7 +7,7 @@ import sharp from "sharp";
 
 const SITES = {
   article: { origin: "http://127.0.0.1:8080", script: "preview" },
-  guide: { origin: "http://127.0.0.1:8033", script: "docs:preview" },
+  docs: { origin: "http://127.0.0.1:8033", script: "docs:preview" },
 };
 const OUTPUT = new URL("../docs/images/", import.meta.url);
 const STAGE = { width: 960, height: 540 };
@@ -112,9 +112,9 @@ const REEL = [
     steps: [[null, 2200]],
   },
   {
-    site: "guide",
-    path: "/",
-    figure: "figure#guide-routing",
+    site: "docs",
+    path: "/interactive-figures/",
+    figure: "figure#docs-routing",
     label: "Mechanisms with knobs",
     steps: [
       [null, 900],
@@ -128,9 +128,9 @@ const REEL = [
 ];
 const RULES = [
   {
-    site: "guide",
+    site: "docs",
     path: "/",
-    figure: "figure#guide-rules",
+    figure: "figure#docs-rules",
     label: "How a build works",
     steps: [
       [press("The whole flow"), 2600],
@@ -267,7 +267,8 @@ try {
         )
       )
         break;
-      if (attempt > 60) throw new Error(`${origin} did not start; build the article and guide.`);
+      if (attempt > 60)
+        throw new Error(`${origin} did not start; build the article and documentation.`);
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
   }

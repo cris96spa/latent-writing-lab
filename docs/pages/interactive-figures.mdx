@@ -1,0 +1,283 @@
+---
+title: "Interactive figures"
+subtitle: "Figures readers operate, written as one HTML file each and shown anywhere."
+description: "Place, configure, write, test and embed interactive figures."
+authors: []
+template: "article"
+showPdf: false
+licence: "Built with Thibaud Frere's research-article-template (CC BY 4.0). Reused demonstrations retain their attribution."
+---
+
+import HtmlEmbed from "../../components/HtmlEmbed.astro";
+import Accordion from "../../components/Accordion.astro";
+import Note from "../../components/Note.astro";
+
+## A figure is one HTML file
+
+Every interactive figure is a fragment of HTML in `app/src/content/embeds/`, with its own styles
+and script. A chapter places it with the `HtmlEmbed` component, which adds the frame, title and
+caption, and starts the script when the figure scrolls into view. Inside, a figure can draw with
+D3, SVG, Canvas or plain HTML; nothing is compiled, and no framework is needed.
+
+Type an expression into the plotter, such as `sin(3*x) * exp(-x/4)`:
+
+<HtmlEmbed
+  id="docs-plotter"
+  src="d3-equation-editor.html"
+  title="Function plotter"
+  desc="Upstream demonstration by Thibaud Frere, research-article-template (CC BY 4.0)."
+/>
+
+```mdx
+import HtmlEmbed from "../../components/HtmlEmbed.astro";
+
+<HtmlEmbed
+  id="plotter"
+  src="d3-equation-editor.html"
+  title="Function plotter"
+  desc="Type an expression to redraw the curve."
+/>
+```
+
+| Prop        | What it does                                                    |
+| ----------- | --------------------------------------------------------------- |
+| `src`       | The file in `embeds/`, such as `sankey.html` or `folder/x.html` |
+| `title`     | The heading above the figure                                    |
+| `desc`      | The caption below it; inline HTML allowed                       |
+| `id`        | An anchor, so the text can link to `#id`                        |
+| `config`    | An object of options the figure's script reads                  |
+| `data`      | One or more data file names the figure's script reads           |
+| `wide`      | Lets the figure extend beyond the text column                   |
+| `frameless` | Removes the card around the figure                              |
+| `align`     | Aligns the title and caption: `left`, `center` or `right`       |
+
+## Start from a working figure
+
+The starter ships with figures you can use as they are, configure, or copy. Each one below is
+live.
+
+A staged explanation walks readers through a mechanism one step at a time, with controls for
+its parameters. This one ranks four options, keeps the top ones and normalizes their weights:
+
+<HtmlEmbed
+  id="docs-routing"
+  src="d3-routing.html"
+  title="Staged explanation with controls"
+  desc="Illustrative scores [2.2, 1.3, 0.6, 1.8], not measurements. Previous and Next step through the stages."
+/>
+
+A flow diagram shows how quantities split and merge:
+
+<HtmlEmbed
+  id="docs-sankey"
+  src="sankey.html"
+  title="Flows between stages"
+  desc="Upstream demonstration by Thibaud Frere, research-article-template (CC BY 4.0)."
+/>
+
+A matrix shows a value for every pair, and a heatmap reveals its structure at a glance:
+
+<HtmlEmbed
+  id="docs-matrix"
+  src="d3-matrix.html"
+  title="Matrix"
+  desc="Upstream demonstration by Thibaud Frere, research-article-template (CC BY 4.0)."
+/>
+
+The demonstration article holds many more, from a parameter calculator to attention diagrams
+and storage heatmaps. With `npm run dev` running, open
+[http://127.0.0.1:4321/dataviz/](http://127.0.0.1:4321/dataviz/) to browse every figure the
+article uses, each with its source file.
+
+## Feed a figure your data
+
+Data files go in `app/src/content/assets/data/`, and the site serves them at `/data/`. A
+figure reads them through its `config` or `data` props. The line chart below loads a CSV of
+training runs and offers zoom, smoothing and tooltips:
+
+<HtmlEmbed
+  id="docs-line-chart"
+  src="smol-playbook/generic-d3-line-chart.html"
+  title="A chart driven by a CSV file"
+  desc="Loss curves for attention variants. Data and chart from the SmolLM Training Playbook, via research-article-template (CC BY 4.0)."
+  config={{
+    dataUrl: "../data/attention_loss.csv",
+    xDomain: [0, 45e9],
+    yDomain: [2.1, 2.7],
+    smoothing: true,
+  }}
+/>
+
+```mdx
+<HtmlEmbed
+  src="smol-playbook/generic-d3-line-chart.html"
+  title="A chart driven by a CSV file"
+  config={{
+    dataUrl: "/data/attention_loss.csv",
+    xDomain: [0, 45e9],
+    yDomain: [2.1, 2.7],
+    smoothing: true,
+  }}
+/>
+```
+
+The CSV needs one row per point, with the columns the chart expects:
+
+```csv
+run_name,tokens,loss
+Baseline,47185920,9.68
+Baseline,113246208,8.13
+```
+
+`HtmlEmbed` hands `config` and `data` to the figure without interpreting them, so each figure's
+script decides what they mean; read its loader before reshaping a dataset. Everything in the
+data folder is published, even unused files, so keep private data out of it. Record each
+dataset's source, license and transformations next to it.
+
+## Write your own
+
+When no supplied figure fits, copy the closest one and change it. Every figure has the same
+three parts: a root element, styles scoped to that element's class, and a script that mounts
+every copy of the figure on the page:
+
+```html
+<div class="my-figure">
+  <p class="my-figure__fallback">The result, stated in text.</p>
+</div>
+<style>
+  .my-figure {
+    color: var(--text-color);
+  }
+</style>
+<script>
+  (() => {
+    // The model: pure functions, no DOM, so tests can call them.
+    function compute(params) {
+      return {};
+    }
+    // The view: draws one instance and owns its state.
+    function mount(root) {
+      if (root.dataset.mounted) return;
+      root.dataset.mounted = "true";
+      const colors = window.ColorPalettes.getColors(
+        "categorical",
+        4,
+      );
+      // draw with compute(...) and colors
+    }
+    document.querySelectorAll(".my-figure").forEach(mount);
+  })();
+</script>
+```
+
+A few rules make a figure reliable everywhere it appears:
+
+- **Scope everything** to the root class, and rename it in a copied figure, so two figures on
+  one page cannot affect each other.
+- **Keep state per instance** and guard against mounting twice, because a page can show the
+  same figure more than once.
+- **Use the theme.** Take colors from the CSS variables and `window.ColorPalettes`, and redraw
+  on the `palettes:updated` event, so the figure follows light and dark mode.
+- **Use labelled HTML controls**, so the figure works with a keyboard and a screen reader.
+- **Size from the container** with a `ResizeObserver`, so the figure fits on a phone.
+- **Separate the model from the drawing**, so a test can check the numbers without reading
+  pixels.
+
+Every figure also has a **publication state**: the state it opens in, which a reset restores.
+The PDF export replaces each figure with a screenshot of that state, and the fallback paragraph
+is what readers see without JavaScript, so both should make the figure's point on their own.
+
+<Note title="A static image is sometimes better" variant="info">
+  If readers would never change a parameter, an interactive figure
+  adds code without adding understanding. A captioned image loads
+  faster and prints exactly as it appears.
+</Note>
+
+<Accordion title="Ask a person or a coding agent to build a figure">
+
+The brief decides the result more than the code does. State the claim, the data, the controls
+and the publication state:
+
+```text
+Read AGENTS.md and the upstream HTML embed skill and directives.
+Teaching claim and audience: ...
+Data, source and simplifying assumptions: ...
+Controls, ranges and defaults: ...
+Static publication state: ...
+Use native HtmlEmbed, theme variables and palettes.
+Keep the model separate from rendering and test its invariants.
+```
+
+The upstream embed skill, `.ai/skills/create-html-embed/SKILL.md`, and its `directives.md`
+hold the complete conventions, and coding agents read them through `AGENTS.md`.
+
+</Accordion>
+
+## Test what the figure claims
+
+Browser tests open the built site in Chromium and operate figures the way a reader would. A
+test that reads the figure's output checks the claim, not just that something rendered:
+
+```ts
+test("the plotter redraws for a new expression", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const figure = page.locator("figure#plotter");
+  const curve = figure.locator("path.function-curve");
+  const before = await curve.getAttribute("d");
+  await figure.getByRole("textbox").fill("sin(2*x)");
+  await expect(curve).not.toHaveAttribute("d", before!);
+});
+```
+
+When the figure models something, test the properties the model must keep. The starter's own
+tests step the staged explanation above through a grid of settings and check that its weights
+always sum to one and never change order. [Publishing](/publishing/#check-the-build) covers
+running the tests.
+
+## Embed a figure on any website
+
+Any figure can get a page of its own at `/figures/<name>/`, rendered from the same file as the
+figure in your article. Another website shows that page in an iframe, so a course page or a blog
+can use the figure without copying it, and every improvement reaches all of them with one
+deployment. The frame below is the function plotter's own page, embedded; type into it:
+
+<iframe
+  src="/figures/function-plotter/"
+  title="The function plotter's standalone page, embedded in an iframe"
+  loading="lazy"
+  style={{ width: "100%", height: "720px", border: 0 }}
+/>
+
+[Open the function plotter on its own](/figures/function-plotter/). To publish a figure this way, add it to
+`app/src/content/figures.json`:
+
+```json
+{
+  "my-figure": {
+    "src": "d3-matrix.html",
+    "title": "Matrix",
+    "description": "What the figure shows, and where its data comes from.",
+    "lang": "en"
+  }
+}
+```
+
+The four fields are required; `"frameless": true` lets the figure supply its own card. Build
+the site, deploy it, and embed the page anywhere:
+
+```html
+<iframe
+  src="https://YOUR-ARTICLE-HOST/figures/my-figure/"
+  title="Matrix"
+  loading="lazy"
+  style="width: 100%; height: 560px; border: 0"
+></iframe>
+```
+
+In React or another JSX framework, write the style as an object. The standalone page cannot
+take `config` or `data`, so the figure must work with the defaults in its own source. The iframe
+keeps the height you give it, and the figure follows its own theme toggle rather than the host
+page's. Register a figure only when another site will show it, and remove any of the starter's
+three registered figures you do not want published.

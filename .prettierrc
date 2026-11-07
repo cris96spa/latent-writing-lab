@@ -3,7 +3,7 @@
   "plugins": ["prettier-plugin-astro"],
   "overrides": [
     {
-      "files": "docs/chapters/*.mdx",
+      "files": "docs/pages/*.mdx",
       "options": { "printWidth": 68 }
     }
   ]

@@ -17,13 +17,13 @@ if (!["dev", "build", "preview"].includes(command)) {
 const stage = join(
   root,
   ".cache",
-  `guide-${command}${command === "build" ? "" : `-${process.pid}`}`,
+  `docs-${command}${command === "build" ? "" : `-${process.pid}`}`,
 );
 const content = join(stage, "src/content");
 const output = join(root, "docs-dist");
 if (command === "preview") {
   await access(join(output, "index.html")).catch(() => {
-    throw new Error("Build the guide first with npm run docs:build.");
+    throw new Error("Build the documentation first with npm run docs:build.");
   });
 }
 await rm(stage, { recursive: true, force: true });
@@ -43,15 +43,65 @@ await cp(app, stage, {
 });
 // Packages resolve from the root npm workspace; Vite caches stay local to this copy.
 await mkdir(join(stage, "node_modules"));
+// The documentation is a set of pages, not chapters of one article. Each page in docs/pages is
+// copied into chapters/: article.mdx imports index.mdx at /, and every other page is served at
+// /<name>/ by a copy of the template's own article page that imports it instead.
 await rm(join(content, "chapters"), { recursive: true, force: true });
-await cp(join(docs, "chapters"), join(content, "chapters"), { recursive: true });
-await cp(join(docs, "article.mdx"), join(content, "article.mdx"));
-// Figures used only by the guide live in docs/embeds and join the article's embeds in the copy.
-// A shared name would silently replace an article figure, so it stops the guide instead.
-const guideEmbeds = join(docs, "embeds");
-for (const entry of await readdir(guideEmbeds, { recursive: true, withFileTypes: true })) {
+await mkdir(join(content, "chapters"));
+const pagesDir = join(docs, "pages");
+const pages = JSON.parse(await readFile(join(pagesDir, "pages.json"), "utf8")).map((page) => ({
+  ...page,
+  slug: page.file === "index.mdx" ? "" : page.file.replace(/\.mdx$/, ""),
+}));
+const articlePage = await readFile(join(app, "src/pages/index.astro"), "utf8");
+for (const needle of ['"../content/article.mdx"', '"src/content/article.mdx"']) {
+  if (!articlePage.includes(needle)) {
+    throw new Error(
+      `The template's article page no longer reads ${needle}; update tools/docs.mjs.`,
+    );
+  }
+}
+for (const { slug } of pages.filter((page) => page.slug)) {
+  const taken = await access(join(app, "src/pages", slug)).then(
+    () => true,
+    () =>
+      access(join(app, "src/pages", `${slug}.astro`)).then(
+        () => true,
+        () => false,
+      ),
+  );
+  if (taken) throw new Error(`docs/pages/${slug}.mdx would replace the site's /${slug}/ page.`);
+  await writeFile(
+    join(stage, "src/pages", `${slug}.astro`),
+    articlePage
+      .replace('"../content/article.mdx"', `"../content/chapters/${slug}.mdx"`)
+      .replace('"src/content/article.mdx"', `"src/content/chapters/${slug}.mdx"`),
+  );
+}
+// Every page gets the same navigation, so pages never link to each other by hand.
+await mkdir(join(stage, "src/components/docs"), { recursive: true });
+await cp(join(docs, "components"), join(stage, "src/components/docs"), { recursive: true });
+await writeFile(join(stage, "src/components/docs/pages.json"), JSON.stringify(pages, null, 2));
+async function writePage(file) {
+  const page = pages.find((entry) => entry.file === file);
+  if (!page) return;
+  const source = await readFile(join(pagesDir, file), "utf8");
+  const frontmatter = source.match(/^---\n[\s\S]*?\n---\n/)?.[0] ?? "";
+  const nav = 'import DocsNav from "../../components/docs/DocsNav.astro";\n\n<DocsNav />\n';
+  const body = `${frontmatter}\n${nav}${source.slice(frontmatter.length)}\n\n<DocsNav position="bottom" />\n`;
+  await writeFile(join(content, "chapters", file), body);
+  if (!page.slug) {
+    const entry = `${frontmatter}\nimport Page from "./chapters/index.mdx";\n\n<Page />\n`;
+    await writeFile(join(content, "article.mdx"), entry);
+  }
+}
+for (const { file } of pages) await writePage(file);
+// Figures used only by the documentation live in docs/embeds and join the article's embeds.
+// A shared name would silently replace an article figure, so it stops the build instead.
+const docsEmbeds = join(docs, "embeds");
+for (const entry of await readdir(docsEmbeds, { recursive: true, withFileTypes: true })) {
   if (!entry.isFile()) continue;
-  const name = relative(guideEmbeds, join(entry.parentPath ?? entry.path, entry.name));
+  const name = relative(docsEmbeds, join(entry.parentPath ?? entry.path, entry.name));
   if (
     await access(join(app, "src/content/embeds", name)).then(
       () => true,
@@ -61,7 +111,7 @@ for (const entry of await readdir(guideEmbeds, { recursive: true, withFileTypes:
     throw new Error(`docs/embeds/${name} has the same name as an article embed; rename it.`);
   }
 }
-await cp(guideEmbeds, join(content, "embeds"), { recursive: true });
+await cp(docsEmbeds, join(content, "embeds"), { recursive: true });
 
 const watchers = [];
 let pending = Promise.resolve();
@@ -82,21 +132,21 @@ function mirror(sourceRoot, targetRoot, accept = () => true) {
           await cp(source, target, { recursive: info.isDirectory() });
         }
       })
-      .catch((error) => console.error("Guide source update failed:", error));
+      .catch((error) => console.error("Documentation source update failed:", error));
   });
   watchers.push(watcher);
 }
 
 if (command === "dev") {
-  mirror(
-    docs,
-    content,
-    (name) =>
-      name === "article.mdx" ||
-      name === "chapters" ||
-      name.startsWith(`chapters${sep}`) ||
-      name.startsWith(`embeds${sep}`),
-  );
+  mirror(join(docs, "embeds"), join(content, "embeds"));
+  mirror(join(docs, "components"), join(stage, "src/components/docs"));
+  const pageWatcher = watch(pagesDir, (_event, filename) => {
+    if (!filename?.endsWith(".mdx")) return;
+    pending = pending
+      .then(() => writePage(filename))
+      .catch((error) => console.error("Documentation page update failed:", error));
+  });
+  watchers.push(pageWatcher);
   for (const folder of ["embeds", "assets"]) {
     mirror(join(app, "src/content", folder), join(content, folder));
   }

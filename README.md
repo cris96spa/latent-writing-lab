@@ -8,12 +8,12 @@ Write in Markdown. Add figures readers can operate.<br/>
 Ship a website, a PDF and figures that embed anywhere.
 
 [![Checks](https://img.shields.io/github/actions/workflow/status/cris96spa/latent-writing-lab/check.yml?branch=development&style=flat-square&label=checks)](https://github.com/cris96spa/latent-writing-lab/actions/workflows/check.yml)
-[![Guide](https://img.shields.io/badge/guide-read%20online-E07A47?style=flat-square)](https://cris96spa.github.io/latent-writing-lab/)
+[![Docs](https://img.shields.io/badge/docs-read%20online-E07A47?style=flat-square)](https://cris96spa.github.io/latent-writing-lab/)
 [![Node](https://img.shields.io/badge/node-%E2%89%A522.12-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Astro](https://img.shields.io/badge/Astro-4-BC52EE?style=flat-square&logo=astro&logoColor=white)](https://astro.build/)
 [![Engine](https://img.shields.io/badge/engine-research--article--template-FFD21E?style=flat-square&logo=huggingface&logoColor=black)](https://github.com/tfrere/research-article-template)
 
-[**Read the guide →**](https://cris96spa.github.io/latent-writing-lab/) &nbsp;·&nbsp; [Quick start](#quick-start) &nbsp;·&nbsp; [How it works](#how-it-works) &nbsp;·&nbsp; [Your own article](#write-your-own-article)
+[**Read the docs →**](https://cris96spa.github.io/latent-writing-lab/) &nbsp;·&nbsp; [Quick start](#quick-start) &nbsp;·&nbsp; [How it works](#how-it-works) &nbsp;·&nbsp; [Your own article](#write-your-own-article)
 
 <br/>
 
@@ -22,7 +22,7 @@ Ship a website, a PDF and figures that embed anywhere.
   <img src="docs/images/hero-light.gif" width="820" alt="A reel of interactive figures rendered by the engine: an embedding map of research papers, attention architecture diagrams, a neural network classifying a hand-drawn digit, a data-flow Sankey, a GPU bandwidth explorer, benchmark heatmaps and a mixture-of-experts router with sliders">
 </picture>
 
-<sub>Every figure above is live in the demo article and the guide. Readers hover, draw, drag and switch, right in the page.</sub>
+<sub>Every figure above is live in the demo article and the docs. Readers hover, draw, drag and switch, right in the page.</sub>
 
 </div>
 
@@ -41,7 +41,7 @@ operate. All three run on Thibaud Frere's
 [research-article-template](https://github.com/tfrere/research-article-template).
 
 **Latent Writing Lab is the starter kit for writing your own.** Create a repository from it,
-write, and publish. Everything an article needs is ready: a hands-on guide, figures to start
+write, and publish. Everything an article needs is ready: live documentation, figures to start
 from, embeddable figure pages, PDF export, and browser tests that catch a broken figure before
 your readers do.
 
@@ -101,7 +101,7 @@ npm run dev
 ```
 
 Open <http://127.0.0.1:4321> for the demo article, which shows every component the engine
-offers. To read the guide next to it, run `make doc` in a second terminal and open
+offers. To read the docs next to it, run `make doc` in a second terminal and open
 <http://127.0.0.1:8031>.
 
 ## How it works
@@ -127,9 +127,9 @@ Three rules keep it predictable:
 
 1. Click **Use this template** to create a repository for your article.
 2. Clone it, then run `npm ci` and `npm run dev`.
-3. Replace the demo with your first chapter: the guide's
-   [Start your own project](https://cris96spa.github.io/latent-writing-lab/#start-your-own-project)
-   section does it in two files.
+3. Replace the demo with your first chapter, as the docs'
+   [quick start](https://cris96spa.github.io/latent-writing-lab/#quick-start) shows in two
+   files.
 4. Run `npm run check` and `npm run test:e2e`, then deploy `app/dist` to any static host, a
    Hugging Face Space or the included Docker image.
 
@@ -146,19 +146,24 @@ Three rules keep it predictable:
 | `app/src/content/assets/`                     | Images, audio and datasets                          |
 | `app/src/content/figures.json`                | Figures that get their own embeddable page          |
 | `app/src/components/`, `plugins/`, `scripts/` | The template's engine; no need to touch it          |
-| `docs/`                                       | The guide and the maintainer documentation          |
+| `docs/`                                       | The documentation site and the README animations    |
 | `tools/`, `e2e/`                              | Checks and browser tests                            |
 
 </details>
 
 ## Documentation
 
-- **[The guide](https://cris96spa.github.io/latent-writing-lab/)**: from a new repository to a
-  published article, with live figures. Start here to write.
-- **[How it works](docs/how-it-works.md)**: follow one figure from an HTML file to every page
-  that shows it, and see why each piece exists.
-- **[Reference](docs/reference.md)**: every command and check, CI, engine updates and work on
-  the docs.
+The documentation is a site built by the same engine, so every example in it is live. Read it
+[online](https://cris96spa.github.io/latent-writing-lab/) or run `make doc`.
+
+- **[Overview](https://cris96spa.github.io/latent-writing-lab/)**: what you can build, a quick start and how the pieces fit.
+- **[Writing](https://cris96spa.github.io/latent-writing-lab/writing/)**: Markdown, math, citations, layouts and imports.
+- **[Components](https://cris96spa.github.io/latent-writing-lab/components/)**: every component, live, with its source.
+- **[Interactive figures](https://cris96spa.github.io/latent-writing-lab/interactive-figures/)**: use, configure, write, test and embed
+  figures.
+- **[Publishing](https://cris96spa.github.io/latent-writing-lab/publishing/)**: checks, PDF and LaTeX exports, and hosting.
+- **[Workspace](https://cris96spa.github.io/latent-writing-lab/workspace/)**: project layout, engine updates, coding agents and
+  commands.
 
 ## Credits
 

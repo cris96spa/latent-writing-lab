@@ -1,0 +1,186 @@
+---
+title: "Workspace"
+subtitle: "How the project is organized, kept current, and extended."
+description: "Repository layout, ownership, engine updates, coding agents, commands and this documentation."
+authors: []
+template: "article"
+showPdf: false
+licence: "Built with Thibaud Frere's research-article-template (CC BY 4.0)."
+---
+
+import Accordion from "../../components/Accordion.astro";
+import Note from "../../components/Note.astro";
+
+## One repository per article
+
+Latent Writing Lab is a GitHub template. Each article you publish separately gets a repository
+of its own, created with **Use this template**, and everything inside it serves that one
+article:
+
+| You are working on                  | Use                                    |
+| ----------------------------------- | -------------------------------------- |
+| An article you publish separately   | A new repository from the template     |
+| Another section of that article     | A chapter in the same repository       |
+| A draft or a revision               | A branch, reviewed in a pull request   |
+| A figure several sites show         | One owning project and its figure page |
+| An improvement to the tooling or CI | A change to the starter itself         |
+
+A project created from the template is a snapshot, so later starter improvements do not reach
+it on their own. Note the starter commit a project began from, and bring later fixes across as
+reviewed patches. Never copy the starter's `app/src/content` over a project's: it replaces the
+article with the demonstration.
+
+## What lives where
+
+| Path                               | Holds                                              | Owner    |
+| ---------------------------------- | -------------------------------------------------- | -------- |
+| `app/src/content/article.mdx`      | The article's metadata and chapter list            | You      |
+| `app/src/content/chapters/`        | Chapters                                           | You      |
+| `app/src/content/embeds/`          | Figures, one HTML file each                        | You      |
+| `app/src/content/assets/`          | Images, audio and data, served publicly            | You      |
+| `app/src/content/bibliography.bib` | References                                         | You      |
+| `app/src/content/figures.json`     | Figures with their own embeddable page             | You      |
+| `app/src/pages/figures/`           | The standalone figure page                         | The kit  |
+| `docs/`                            | This documentation and the README media            | The kit  |
+| `tools/`, `e2e/`, `.github/`       | Checks, browser tests and CI                       | The kit  |
+| Everything else under `app/`       | The engine: components, styles, plugins, exporters | Upstream |
+
+The engine is used exactly as upstream ships it, which keeps every update a reviewable
+comparison between two upstream revisions. `template-provenance.json` records the upstream
+commit and a SHA-256 hash of every engine file, and `npm run check` stops at the first file that
+differs. Change the engine only through an update, and contribute engine fixes upstream.
+
+<Accordion title="Update the engine to a newer upstream revision">
+
+The template's sync command, previewed with `npm run sync:template:dry`, touches root files as
+well as the application, and preserves content but not this kit's configuration.
+
+<Note title="Never sync in your working copy" variant="danger">
+  Run the sync in a disposable copy of the repository and review the
+  result there.
+</Note>
+
+1. Copy the repository to a scratch directory and run the sync there.
+2. Compare the result with the pinned revision, and choose the upstream changes to accept.
+3. Bring them into the repository, keeping your content, the figure page, the tooling and the
+   local instructions.
+4. Record the new commit and hashes in `template-provenance.json`, and update the root
+   `package-lock.json`.
+5. Run the checks, the browser tests and a PDF export.
+
+The template's dependency ranges include Astro 4 and other packages with known advisories,
+some of which need coordinated major upgrades, so run `npm audit` when reviewing an update. The
+servers bind to localhost and the container serves static files, but the build processes your
+content, which must come from trusted sources.
+
+</Accordion>
+
+## Work with coding agents
+
+`AGENTS.md`, which `CLAUDE.md` links to, gives coding agents the project's rules: who owns which
+files, how figures are built, and which checks to run. Skills in `.ai/skills/` teach specific
+tasks:
+
+| Skill                 | Teaches                                                       |
+| --------------------- | ------------------------------------------------------------- |
+| `create-html-embed`   | Building interactive figures the engine can mount and theme   |
+| `article-frontmatter` | Every frontmatter field and its default                       |
+| `deploy-to-hf-spaces` | Publishing on a Hugging Face Space, when explicitly requested |
+| `write-documentation` | Writing prose, captions, docs, commits and pull requests      |
+
+The first three come from upstream; `write-documentation` belongs to this kit.
+
+## Commands
+
+Run every command from the repository root.
+
+| Command                | Does                                                      | Address        |
+| ---------------------- | --------------------------------------------------------- | -------------- |
+| `npm run dev`          | Live preview of the article                               | 127.0.0.1:4321 |
+| `npm run build`        | Builds the article into `app/dist`                        |                |
+| `npm run preview`      | Serves `app/dist`                                         | 127.0.0.1:8080 |
+| `make doc`             | Live preview of this documentation                        | 127.0.0.1:8031 |
+| `make doc-build`       | Builds this documentation into `docs-dist`                |                |
+| `npm run docs:preview` | Serves `docs-dist`                                        | 127.0.0.1:8033 |
+| `npm run check`        | Engine hashes, figure registry, formatting, article build |                |
+| `make doc-check`       | Documentation links, then the documentation build         |                |
+| `npm run test:e2e`     | Browser tests against both builds                         |                |
+| `npm run format`       | Formats the files `check` verifies                        |                |
+| `npm run export:pdf`   | PDF of the built article                                  |                |
+| `npm run readme:media` | Records the README animations                             |                |
+
+Without Make, `npm run docs:dev`, `npm run docs:build` and `npm run docs:check` do the same
+work, and `make doc DOC_PORT=8032` picks another port.
+
+## This documentation
+
+These pages are MDX files in `docs/pages/`, built by the same engine as your article, so every
+example in them is live. The engine builds one article per site, so `tools/docs.mjs` assembles a
+working copy in `.cache/`: `index.mdx` takes the article's place at `/`, every other page is
+served at `/<name>/` by a copy of the template's article page that imports it, and the shared
+navigation from `docs/components/` is added to the top and bottom of each page. Your own
+article and the engine's files are never touched, so `npm run dev` and `make doc` run side by
+side.
+
+To add a page, create `docs/pages/<name>.mdx` with frontmatter like the existing pages, add it to
+`docs/pages/pages.json` in reading order, and restart `make doc`. Edits to existing pages,
+figures and assets reload live. A figure only the documentation uses goes in `docs/embeds/`,
+under a name no article figure uses, because the tool refuses to build on a collision. Diagrams
+in these pages are figures like any other; Mermaid belongs only in plain Markdown files. The
+[writing skill](https://github.com/cris96spa/latent-writing-lab/blob/HEAD/.ai/skills/write-documentation/SKILL.md)
+sets the style.
+
+<Accordion title="Check a change to the documentation">
+
+Prettier formats code in `docs/pages/` at 68 characters, the width of the code column, so wrap
+prose inside an MDX example by hand to match. Run any command or snippet you document in a
+disposable copy of the repository first. Then:
+
+```sh
+make doc-check
+npm run build
+npm run test:e2e
+```
+
+`e2e/docs.spec.ts` visits every page in `pages.json` and operates the overview's figures, so
+change it in the same commit as the page list, the rules figure's button labels, or the figure
+ids `docs-showcase`, `docs-rules`, `docs-plotter` and `docs-routing`.
+
+</Accordion>
+
+<Accordion title="Publish this documentation on GitHub Pages">
+
+In **Settings → Pages**, set **Source** to **GitHub Actions**. Every push to the default branch
+that passes validation then builds and deploys these pages to
+`https://OWNER.github.io/REPOSITORY/`. Until the source is set, CI leaves a notice and publishes
+nothing, so projects created from the template never publish documentation by accident.
+
+GitHub Pages serves a repository's site under `/REPOSITORY/`, so the build takes Astro's
+`--base` option, and `tools/docs.mjs` prefixes the root-relative links the template writes:
+
+```sh
+npm run docs:build -- --base /latent-writing-lab/
+```
+
+The prefixing covers `src` and `href` attributes, not addresses a figure's script builds at
+run time, so a figure on a page other than the overview loads data from a relative path such as
+`../data/file.csv`. The build does not set Astro's `site`, because the sitemap integration fails
+under Astro 4 when it is set, so the published documentation has no sitemap.
+
+</Accordion>
+
+<Accordion title="Refresh the README animations">
+
+The animations in the README are recordings of real figures. `tools/readme-media.mjs` plays a
+scripted scene on each one in both themes and writes the GIFs to `docs/images/`:
+
+```sh
+npm run build
+make doc-build
+npm run readme:media
+```
+
+Each scene lists its actions and how long each state stays on screen, so changing a recording
+means editing that list.
+
+</Accordion>

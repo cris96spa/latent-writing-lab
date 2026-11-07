@@ -11,7 +11,7 @@ permissions:
 concurrency:
   group: validation-${{ github.workflow }}-${{ github.ref }}
   # A newer run supersedes an older one, except on the default branch, where the older run may
-  # be deploying the guide and must finish.
+  # be deploying the documentation and must finish.
   cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
 
 defaults:
@@ -47,10 +47,10 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  guide-pages-build:
-    name: Build the guide for GitHub Pages
+  docs-pages-build:
+    name: Build the documentation for GitHub Pages
     needs: check
-    # Only a validated push or manual run on the default branch publishes the guide.
+    # Only a validated push or manual run on the default branch publishes the documentation.
     if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -72,7 +72,7 @@ jobs:
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::GitHub Pages does not deploy from GitHub Actions in this repository; the guide is not published."
+            echo "::notice::GitHub Pages does not deploy from GitHub Actions in this repository; the documentation is not published."
           fi
       - name: Check out repository
         if: steps.source.outputs.enabled == 'true'
@@ -91,20 +91,20 @@ jobs:
         if: steps.source.outputs.enabled == 'true'
         id: pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
-      # A project site is served under /<repository>/, so the guide is built for that base path.
-      - name: Build the guide
+      # A project site is served under /<repository>/, so the documentation is built for that base path.
+      - name: Build the documentation
         if: steps.source.outputs.enabled == 'true'
         run: npm run docs:build -- --base "${{ steps.pages.outputs.base_path }}/"
-      - name: Upload the guide
+      - name: Upload the documentation
         if: steps.source.outputs.enabled == 'true'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
           path: docs-dist/
 
-  guide-pages-deploy:
-    name: Publish the guide on GitHub Pages
-    needs: guide-pages-build
-    if: needs.guide-pages-build.outputs.enabled == 'true'
+  docs-pages-deploy:
+    name: Publish the documentation on GitHub Pages
+    needs: docs-pages-build
+    if: needs.docs-pages-build.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -114,7 +114,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     concurrency:
-      group: guide-pages
+      group: docs-pages
       cancel-in-progress: false
     steps:
       - name: Deploy to GitHub Pages
