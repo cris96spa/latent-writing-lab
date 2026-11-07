@@ -59,8 +59,9 @@ working copy. Edit documentation in `docs/`, never generated `.cache/` or `docs-
 Write documentation by the writing skill: lead with the reader's problem, give each
 fact one home, and run every command you document. Use live examples and expandable
 details in the documentation where they help the reader act.
-Do not publish a site, package or container unless requested. CI never deploys the article;
-on the default branch it publishes only the documentation, to GitHub Pages, once the repository's
-Pages source is GitHub Actions.
+Do not publish a site, package or container unless requested. Once the repository's Pages
+source is GitHub Actions, CI publishes to GitHub Pages after every validated push to the default
+branch: the article in projects created from the template, the documentation in the template
+itself. CI publishes nothing else.
 Documentation describes present behavior, with no migration narrative. Use Conventional
 Commits if asked to commit. Keep project rules consistent with the native template.

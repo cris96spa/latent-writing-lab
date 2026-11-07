@@ -97,11 +97,38 @@ exporter's default name or link to your own.
 
 ## Put it online
 
-<Note title="Nothing publishes on its own" variant="danger">
-  CI builds and tests every push but never deploys your article.
-  Deployment is always a step you take, on a revision you have
-  reviewed.
+**GitHub Pages, on every merge.** A repository created from the template publishes itself. Turn
+it on once: in **Settings → Pages**, set **Source** to **GitHub Actions**. From then on, every
+push to the default branch that passes the checks deploys the article to
+`https://OWNER.github.io/REPOSITORY/`. Pull requests are built and tested but never published,
+so a pull request is where you review, and merging is when you publish.
+
+<Note title="Merging publishes" variant="danger">
+  With GitHub Pages turned on, a merge to the default branch goes
+  live as soon as its checks pass. Review the prose, sources and
+  figures in the pull request before you merge.
 </Note>
+
+<Accordion title="How the article works under /REPOSITORY/">
+
+GitHub Pages serves a repository's site under `/REPOSITORY/`, while the engine assumes the site
+root. CI therefore builds with Astro's `--base` option, then prefixes the addresses the engine
+and its figures use: links, scripts, and paths to `/data/` and `/scripts/`, including the ones
+figure scripts fetch while they run. To reproduce the build locally:
+
+```sh
+npm run pages:build -- article /latent-writing-lab/
+```
+
+```text
+Prefixed 56 root-relative addresses in 5 pages with /latent-writing-lab/.
+```
+
+Any other root-relative address a figure builds at run time is not prefixed, so load files from
+`/data/`. The build does not set Astro's `site`, because the installed sitemap integration fails
+under Astro 4 when it is set, so a Pages site has no sitemap or canonical addresses.
+
+</Accordion>
 
 **Any static host.** Deploy the whole of `app/dist/` at the root of a domain, keeping `_astro`,
 `data`, `scripts` and the figure pages together. The site loads its files from root-relative
@@ -115,7 +142,8 @@ docker run --rm -p 8080:8080 my-article
 ```
 
 **A Hugging Face Space.** Spaces run the same container, and the template is listed in the
-Hugging Face gallery of research articles.
+Hugging Face gallery of research articles. A push to a Space publishes at once, without the
+checks a pull request runs.
 
 <Accordion title="Publish on a Hugging Face Space">
 

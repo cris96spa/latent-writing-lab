@@ -28,6 +28,7 @@
     "docs:dev": "node tools/docs.mjs dev",
     "docs:build": "node tools/docs.mjs build",
     "docs:preview": "node tools/docs.mjs preview",
+    "pages:build": "node tools/pages.mjs",
     "readme:media": "node tools/readme-media.mjs"
   },
   "devDependencies": {
