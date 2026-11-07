@@ -1,0 +1,182 @@
+---
+title: "Latent Writing Lab"
+subtitle: "Research articles your readers can play with."
+description: "Write research articles in Markdown with math, citations and interactive figures, and publish them as a website, a PDF and figures that embed anywhere."
+authors: []
+template: "article"
+showPdf: false
+tableOfContentsAutoCollapse: true
+licence: "Built with Thibaud Frere's research-article-template (CC BY 4.0). Reused demonstrations retain their attribution."
+---
+
+import HtmlEmbed from "../../components/HtmlEmbed.astro";
+import Accordion from "../../components/Accordion.astro";
+
+## What you can build
+
+A research article usually stops at the page: it states a result, and the reader takes it on
+trust. Latent Writing Lab lets you publish one the reader can operate. You write prose in
+Markdown, math in LaTeX and sources in BibTeX, and you add figures that respond to the reader:
+sliders, drawings, filters, step-by-step animations. One build turns the same sources into a
+themed website, a PDF and stand-alone figure pages that any other site can embed.
+
+Draw a digit in the figure below. The network classifies it as you draw, and every layer
+updates with your stroke.
+
+<HtmlEmbed
+  id="docs-showcase"
+  src="d3-neural-network.html"
+  frameless
+  title="A figure readers can operate"
+  desc="Draw a digit on the left; activations flow through the layers and the class probabilities update. Upstream demonstration by Thibaud Frere, research-article-template (CC BY 4.0)."
+/>
+
+The articles are built by Thibaud Frere's
+[research-article-template](https://github.com/tfrere/research-article-template), the engine
+behind Hugging Face's long-form research posts such as the
+[Smol Training Playbook](https://huggingface.co/spaces/HuggingFaceTB/smol-training-playbook).
+The engine supplies the layout, math, citations, theming, table of contents and exports. Latent
+Writing Lab adds what a project needs around it: figure pages other sites can embed, browser
+tests that operate your figures, CI, and this documentation, which runs on the same engine. Every
+example on these pages is live.
+
+<div className="feature-grid">
+  <a href="/writing/" className="feature-card">
+    <strong>Markdown, math and citations</strong>
+    <span>
+      Chapters in MDX, LaTeX equations, BibTeX references, two
+      layouts.
+    </span>
+  </a>
+  <a href="/components/" className="feature-card">
+    <strong>Components</strong>
+    <span>
+      Notes, sidenotes, glossary terms, accordions, images, grids,
+      wide sections.
+    </span>
+  </a>
+  <a href="/interactive-figures/" className="feature-card">
+    <strong>Interactive figures</strong>
+    <span>
+      One HTML file each, with D3, SVG or Canvas, fed by your data.
+    </span>
+  </a>
+  <a
+    href="/interactive-figures/#embed-a-figure-on-any-website"
+    className="feature-card"
+  >
+    <strong>Embeddable figures</strong>
+    <span>
+      Every figure can get its own page, framed by any website.
+    </span>
+  </a>
+  <a href="/publishing/" className="feature-card">
+    <strong>Website, PDF and LaTeX</strong>
+    <span>
+      A static site in both themes, with print exports from the same
+      build.
+    </span>
+  </a>
+  <a href="/workspace/" className="feature-card">
+    <strong>Tested and agent-ready</strong>
+    <span>
+      Browser tests, CI, and instructions coding agents follow.
+    </span>
+  </a>
+</div>
+
+## Quick start
+
+You need Git and Node.js 22.12 or later. Clone the repository, install, and start the preview:
+
+```sh
+git clone https://github.com/cris96spa/latent-writing-lab.git
+cd latent-writing-lab
+npm ci
+npm run dev
+```
+
+The preview runs at [http://127.0.0.1:4321/](http://127.0.0.1:4321/) and shows the
+template's demonstration article, which uses every component the engine offers. Saving a file
+refreshes the page. To read these docs locally next to it, run `make doc` in a second terminal
+and open [http://127.0.0.1:8031/](http://127.0.0.1:8031/).
+
+<Accordion title="Start your own article project">
+
+On GitHub, choose **Use this template → Create a new repository** on the starter's page, then
+clone your new repository instead. The template copies the starter's files into a project with
+a history of its own; fork the starter only to contribute back to it. One repository holds one
+article: a new section is another chapter, and a draft is a branch.
+
+On Windows, work inside WSL, which keeps the repository's symbolic links intact. On every
+start, Astro prints two `[WARN] [content]` lines about `article.mdx` and `figures.json`; the
+template produces them, and the article builds normally.
+
+</Accordion>
+
+Your article is defined by one file, `app/src/content/article.mdx`. Replace its contents with a
+title and one chapter, and the demonstration disappears:
+
+```mdx
+---
+title: "My first article"
+template: "paper"
+authors: []
+showPdf: false
+---
+
+import Intro from "./chapters/intro.mdx";
+
+<Intro />
+```
+
+Then create `app/src/content/chapters/intro.mdx`:
+
+```mdx
+import HtmlEmbed from "../../components/HtmlEmbed.astro";
+
+## A first section
+
+Inline math such as $e^{i\pi} + 1 = 0$, and a display equation:
+
+$$
+\int_0^1 x^2 \, dx = \frac{1}{3}
+$$
+
+<HtmlEmbed
+  src="d3-equation-editor.html"
+  title="Plot any function"
+  desc="Type an expression to redraw the curve."
+/>
+```
+
+Save both files: the preview shows your title, the equations and a live function plotter. The
+[Writing](/writing/) page covers everything a chapter can hold.
+
+## How the pieces fit
+
+Three rules explain almost everything the engine does:
+
+1. **What you import is what you publish.** `article.mdx` imports the chapters, in reading
+   order. A chapter it imports is published, and a chapter it does not import is not. There is
+   no draft flag.
+2. **Each figure has one source.** A figure is one HTML file. The article, the figure's own page
+   and any site that embeds it all render that file, so one fix reaches every reader.
+3. **Readers get the build, not your preview.** Readers receive the static site the build
+   writes, or a PDF in which each figure is a still image of the state it opens in. Checks and
+   exports therefore run on the build.
+
+The figure below marks where each rule applies, in a small project with two chapters and one
+figure. Select a rule to highlight its part of the flow.
+
+<HtmlEmbed
+  id="docs-rules"
+  src="guide-three-rules.html"
+  title="Where the three rules apply"
+  desc="An example project: two chapters, one figure, and what the build makes of them."
+/>
+
+The following pages take each part in turn: [Writing](/writing/) and
+[Components](/components/) for the text, [Interactive figures](/interactive-figures/) for what
+readers operate, [Publishing](/publishing/) for checks, exports and hosting, and
+[Workspace](/workspace/) for how the project is organized and maintained.

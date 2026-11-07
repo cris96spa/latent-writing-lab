@@ -1,0 +1,282 @@
+---
+title: "Components"
+subtitle: "What Markdown cannot express: callouts, asides, definitions, images, grids and wide sections."
+description: "Every component the engine provides, live, with its source."
+authors: []
+template: "article"
+showPdf: false
+licence: "Built with Thibaud Frere's research-article-template (CC BY 4.0)."
+---
+
+import Note from "../../components/Note.astro";
+import Sidenote from "../../components/Sidenote.astro";
+import Glossary from "../../components/Glossary.astro";
+import Accordion from "../../components/Accordion.astro";
+import Quote from "../../components/Quote.astro";
+import Image from "../../components/Image.astro";
+import Stack from "../../components/Stack.astro";
+import Wide from "../../components/Wide.astro";
+import FullWidth from "../../components/FullWidth.astro";
+import Reference from "../../components/Reference.astro";
+import placeholder from "../assets/image/placeholder.png";
+import placeholderWide from "../assets/image/placeholder-wide.png";
+
+## Use a component like a tag
+
+A component is imported once at the top of a chapter and placed like an HTML tag. From a
+chapter in `app/src/content/chapters/`, components live two folders up:
+
+```mdx
+import Note from "../../components/Note.astro";
+
+<Note title="State the point in the title" variant="info">
+  The body explains it.
+</Note>
+```
+
+Choose a component for what the content does in the argument, not for how it looks:
+
+| When the reader needs                                | Use                                |
+| ---------------------------------------------------- | ---------------------------------- |
+| A warning, assumption or takeaway they must not miss | [Note](#note)                      |
+| A short aside that stays next to the argument        | [Sidenote](#sidenote)              |
+| A definition without leaving the sentence            | [Glossary](#glossary)              |
+| Optional detail: a derivation, setup, a long table   | [Accordion](#accordion)            |
+| An attributed passage                                | [Quote](#quote)                    |
+| An image with caption, zoom and download             | [Image](#image)                    |
+| Two or more items side by side                       | [Stack](#stack)                    |
+| More room than the text column                       | [Wide](#wide-and-fullwidth)        |
+| A linkable caption around any element                | [Reference](#reference)            |
+| Something to operate                                 | [HtmlEmbed](/interactive-figures/) |
+
+## Note
+
+A note pulls one point out of the flow. Its title states the point, so a reader who skims still
+gets it, and its variant sets the tone.
+
+<Note title="Neutral: context worth a pause">
+  Background the reader should hold in mind.
+</Note>
+<Note title="Info: these values are illustrative" variant="info">
+  Use it for assumptions and scope.
+</Note>
+<Note
+  title="Success: the result holds across seeds"
+  variant="success"
+>
+  Use it for a confirmed takeaway.
+</Note>
+<Note title="Danger: this step deletes data" variant="danger">
+  Use it for anything irreversible.
+</Note>
+
+```mdx
+<Note title="Info: these values are illustrative" variant="info">
+  Use it for assumptions and scope.
+</Note>
+```
+
+`variant` is `neutral` (the default), `info`, `success` or `danger`, and `emoji` adds an icon
+before the title.
+
+## Sidenote
+
+A sidenote sits in the margin beside the paragraph it follows, so the aside stays next to the
+argument without interrupting it. On a phone, it folds into the text.
+
+<Sidenote>
+  A sidenote can hold math too: the derivative of $x^2$ is $2x$.
+</Sidenote>
+
+```mdx
+A paragraph with the main argument.
+
+<Sidenote>
+  A sidenote can hold math too: the derivative of $x^2$ is $2x$.
+</Sidenote>
+```
+
+## Glossary
+
+A glossary term shows its definition when the reader hovers or focuses it: every model has
+
+<Glossary
+  term="parameters"
+  definition="The numbers a model learns during training, such as the weights of its layers."
+/>
+, and the reader never leaves the sentence to learn what they are.
+
+```mdx
+Every model has <Glossary term="parameters"
+  definition="The numbers a model learns during training." />.
+```
+
+`position` places the tooltip (`top`, `bottom`, `left` or `right`), and `disableOnMobile`
+turns it off on touch screens.
+
+## Accordion
+
+An accordion folds away detail that only some readers need, behind a title that says what is
+inside.
+
+<Accordion title="Derive the gradient of the squared error">
+
+For $\mathcal{L}(w) = \tfrac{1}{2}(wx - y)^2$, the chain rule gives
+$\partial \mathcal{L} / \partial w = (wx - y)\,x$.
+
+</Accordion>
+
+```mdx
+<Accordion title="Derive the gradient of the squared error">
+
+For $\mathcal{L}(w) = \tfrac{1}{2}(wx - y)^2$, the chain rule gives
+$\partial \mathcal{L} / \partial w = (wx - y)\,x$.
+
+</Accordion>
+```
+
+Leave a blank line after the opening tag so Markdown inside is parsed, and add `open` to start
+it unfolded.
+
+## Quote
+
+<Quote
+  author="Richard Hamming"
+  source="Numerical Methods for Scientists and Engineers, 1962"
+>
+  The purpose of computing is insight, not numbers.
+</Quote>
+
+```mdx
+<Quote
+  author="Richard Hamming"
+  source="Numerical Methods for Scientists and Engineers, 1962"
+>
+  The purpose of computing is insight, not numbers.
+</Quote>
+```
+
+## Image
+
+Import an image from `app/src/content/assets/image/` and the build optimizes it into modern
+formats and sizes for each screen. Readers select it to zoom in or download it; set
+`zoomable={false}` or `downloadable={false}` to turn either off.
+
+<Image
+  src={placeholder}
+  alt="A broadcast test pattern with concentric circles and gray scales"
+  caption="A test pattern; select it to zoom. Credit: RCA Indian Head test pattern, Wikimedia Commons."
+/>
+
+```mdx
+import Image from "../../components/Image.astro";
+import pattern from "../assets/image/placeholder.png";
+
+<Image
+  src={pattern}
+  alt="A broadcast test pattern with concentric circles"
+  caption="A test pattern; select it to zoom. Credit: …"
+/>
+```
+
+Alt text conveys the information for readers who cannot see the image; the caption states its
+role and credits its source.
+
+## Stack
+
+A stack lays items out in a grid that collapses to one column on a phone.
+
+<Stack layout="3-column" gap="medium">
+  <Note title="Before" variant="info">
+    The baseline, unchanged.
+  </Note>
+  <Note title="During" variant="neutral">
+    The intervention runs.
+  </Note>
+  <Note title="After" variant="success">
+    The measured effect.
+  </Note>
+</Stack>
+
+```mdx
+<Stack layout="3-column" gap="medium">
+  <Note title="Before" variant="info">
+    The baseline, unchanged.
+  </Note>
+  <Note title="During">The intervention runs.</Note>
+  <Note title="After" variant="success">
+    The measured effect.
+  </Note>
+</Stack>
+```
+
+`layout` is `2-column`, `3-column`, `4-column` or `auto`, and `gap` is `small`, `medium` or
+`large`.
+
+## Wide and FullWidth
+
+`Wide` extends its content beyond the text column, and `FullWidth` spans the whole window. Use
+them for a diagram or chart whose detail needs the room.
+
+<Wide>
+  <Image
+    src={placeholderWide}
+    alt="Self-attention computed in two halves on two GPUs, whose partial outputs an all-reduce combines before dropout"
+    caption="Inside Wide: a diagram whose labels need the room. Image included in the upstream template."
+  />
+</Wide>
+
+```mdx
+<Wide>
+  <Image src={chart} alt="…" caption="…" />
+</Wide>
+
+<FullWidth>
+  <Image src={panorama} alt="…" caption="…" />
+</FullWidth>
+```
+
+Check wide content at phone width and in the PDF, which has a fixed page width.
+
+## Reference
+
+A reference wraps any element, such as a table, in a figure with a caption and an `id`, so the
+text can link to it: see [the comparison table](#ref-comparison).
+
+<Reference id="ref-comparison" caption="Three ways to show a result, and what each one costs.">
+
+| Format       | Readers can          | Costs                    |
+| ------------ | -------------------- | ------------------------ |
+| Table        | Look up exact values | Nothing                  |
+| Static chart | See the shape        | An image to keep current |
+| Interactive  | Test the claim       | A figure and its tests   |
+
+</Reference>
+
+```mdx
+<Reference id="ref-comparison" caption="Three ways to show a result.">
+
+| Format | Readers can | Costs |
+| ------ | ----------- | ----- |
+| …      | …           | …     |
+
+</Reference>
+```
+
+`Image` and `HtmlEmbed` take the same `id` and caption props, so every figure can be linked
+the same way.
+
+## Audio and external pages
+
+For audio, import the file and use the native element, with a transcript next to it:
+
+```mdx
+import clip from "../assets/audio/interview.mp3";
+
+<audio controls src={clip} />
+```
+
+For an external application, use an `<iframe>` with a descriptive `title` and a height you have
+tested on a phone. The remote host must allow framing and stay online for your readers. To show
+something readers operate, though, an [interactive figure](/interactive-figures/) is usually the
+better choice: it follows the theme, prints into the PDF and can be tested.

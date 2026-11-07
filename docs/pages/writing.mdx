@@ -1,0 +1,206 @@
+---
+title: "Writing"
+subtitle: "Markdown, math, citations and layouts: everything a chapter can hold."
+description: "How to structure an article, write math and citations, and choose a layout."
+authors: []
+template: "article"
+showPdf: false
+licence: "Built with Thibaud Frere's research-article-template (CC BY 4.0)."
+---
+
+import Note from "../../components/Note.astro";
+import Accordion from "../../components/Accordion.astro";
+import Image from "../../components/Image.astro";
+import Stack from "../../components/Stack.astro";
+import paperLayout from "../assets/image/paper-template.png";
+import articleLayout from "../assets/image/article-template.png";
+
+## An article is one entry file
+
+`app/src/content/article.mdx` defines the article. Its frontmatter, the YAML block at the top,
+holds the title and metadata, and its body imports chapters from `app/src/content/chapters/` and
+places them in reading order:
+
+```mdx
+---
+title: "An article readers can operate"
+subtitle: "One line under the title."
+template: "article"
+authors:
+  - name: "Your name"
+    affiliations: [1]
+affiliations:
+  - name: "Your institution"
+showPdf: false
+---
+
+import Introduction from "./chapters/introduction.mdx";
+import Method from "./chapters/method.mdx";
+
+<Introduction />
+<Method />
+```
+
+Chapters are <a href="https://mdxjs.com/">MDX</a>: Markdown that can import and render
+components. Each one is a file you can draft and review on its own, and all of them share one
+bibliography, one figure numbering and one table of contents. Start a chapter's sections at
+`##`, because the article title is the page's only top-level heading.
+
+<Note title="Everything you import is published" variant="danger">
+  The engine has no draft flag. A half-written chapter that
+  `article.mdx` imports is built and deployed with the rest, so keep
+  it out of the imports until it is ready.
+</Note>
+
+MDX can run code: an import or an expression in a chapter executes when the site builds. Review
+chapter changes as carefully as code.
+
+## Markdown
+
+Headings, paragraphs, **bold**, _italic_, `code`, links, lists, tables, block quotes and code
+fences all work as in any Markdown file. Code fences are highlighted, get a copy button, and
+never run. Footnotes are collected at the end of the article, with the references.[^footnote]
+
+[^footnote]: A footnote holds supporting context that would interrupt the argument.
+
+| Element  | Write                          |
+| -------- | ------------------------------ |
+| Footnote | `text[^id]`, then `[^id]: …`   |
+| Link     | `[text](https://…)`            |
+| Table    | Pipes and a header separator   |
+| Code     | Three backticks and a language |
+
+## Math
+
+Write inline math between single dollar signs and display math between double ones. KaTeX
+renders both at build time, so equations appear instantly and stay sharp in the PDF. The softmax
+function, $\sigma(z)_i = e^{z_i} / \sum_j e^{z_j}$, sits inside a sentence; a derivation gets its
+own lines:
+
+$$
+\nabla_\theta \mathcal{L} = \mathbb{E}_{x \sim \mathcal{D}}
+\left[ \nabla_\theta \log p_\theta(x) \right]
+$$
+
+```mdx
+The softmax function, $\sigma(z)_i = e^{z_i} / \sum_j e^{z_j}$, sits
+inside a sentence; a derivation gets its own lines:
+
+$$
+\nabla_\theta \mathcal{L} = \mathbb{E}_{x \sim \mathcal{D}}
+\left[ \nabla_\theta \log p_\theta(x) \right]
+$$
+```
+
+KaTeX supports most of LaTeX math but not every package, so check unusual commands in the
+preview.
+
+## Citations
+
+Add BibTeX records to `app/src/content/bibliography.bib` and cite them by key. The engine
+formats each citation, links it to its entry, and builds the reference list at the end of the
+page. Transformers replaced recurrence with attention [@vaswani2017attention], and most of them
+are trained with Adam [@kingma2015adam].
+
+```mdx
+Transformers replaced recurrence with attention [@vaswani2017attention],
+and most of them are trained with Adam [@kingma2015adam].
+```
+
+```bibtex
+@inproceedings{vaswani2017attention,
+  title     = {Attention Is All You Need},
+  author    = {Vaswani, Ashish and Shazeer, Noam and others},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2017}
+}
+```
+
+Copy a record's DOI and metadata from the source itself rather than reconstructing them. Any
+chapter can cite any record, and records nobody cites stay out of the reference list.
+
+## Links between parts of the article
+
+Every heading gets an anchor, and figures, images and references take an `id`. Link to them
+like any page section: `[the citations above](#citations)` becomes
+[the citations above](#citations). The table of contents is built from your `##` and `###`
+headings.
+
+## Two layouts
+
+The `template` field chooses how the article is presented. `article` adds a sidebar table of
+contents and a full hero, as on this page; `paper` centers a shorter text under a banner.
+
+<Stack layout="2-column" gap="medium">
+  <Image
+    src={articleLayout}
+    alt="The article layout, with a table of contents in the left sidebar"
+    caption="template: article"
+  />
+  <Image
+    src={paperLayout}
+    alt="The paper layout, with a centered title and a banner"
+    caption="template: paper"
+  />
+</Stack>
+
+Both layouts show the banner from `app/src/content/embeds/banner.html`, which you edit like any
+figure.
+
+<Accordion title="Every frontmatter field">
+
+| Field                         | What it does                                                   |
+| ----------------------------- | -------------------------------------------------------------- |
+| `title`, `subtitle`           | The heading and the line under it; `\n` breaks the title       |
+| `description`                 | Search and social preview text                                 |
+| `authors`, `affiliations`     | Names with affiliation numbers, starting at 1                  |
+| `published`, `doi`            | Shown in the header and used in the citation block             |
+| `template`                    | `article` or `paper`                                           |
+| `licence`                     | Text in the footer; HTML allowed                               |
+| `links`                       | `{label, url}` buttons in the `paper` header                   |
+| `showPdf`                     | Shows the PDF download; keep `false` until the PDF is deployed |
+| `seoThumbImage`               | Image for social previews                                      |
+| `tableOfContentsAutoCollapse` | Collapses table of contents sections the reader is not in      |
+
+Leave out any date or DOI you do not have. The upstream frontmatter skill,
+`.ai/skills/article-frontmatter/SKILL.md`, lists every field with its default.
+
+</Accordion>
+
+## Bring an existing draft
+
+The template converts existing drafts to MDX. Both importers can overwrite `article.mdx` and
+copy assets, so commit first and run them on a separate branch.
+
+<Accordion title="From LaTeX">
+
+Install Pandoc, place `main.tex`, `main.bib` and the related files in
+`app/scripts/latex-importer/input/`, and run:
+
+```sh
+npm run latex:convert
+```
+
+`npm run latex:convert -- --help` lists the other options. Review the equation macros,
+references, images and component imports in the result.
+
+</Accordion>
+
+<Accordion title="From Notion">
+
+Give a Notion integration access to the page, set `NOTION_TOKEN` and `NOTION_PAGE_ID` in your
+shell, and run `npm run notion:import`. Never commit the token. The importer empties its output
+directory and can change the article and the bibliography, so inspect `git diff` and build
+before accepting the result.
+
+</Accordion>
+
+An import is a one-way conversion: once you accept it, edit the MDX, because a later import
+replaces your edits instead of merging them.
+
+## Write for trust
+
+Readers rely on what an article states, so every author, affiliation, source and measurement
+must be real and checked. When a value is invented to illustrate a mechanism, the caption says
+so. Write prose and figure labels in the article's language; the template's own interface, such
+as its buttons and table of contents, stays in English unless you change the engine.

@@ -2,20 +2,23 @@
 
 # Documentation
 
-**Three ways in, depending on what you came to do.**
+**A site built by the same engine as your article, so every example in it is live.**
+
+[**Read it online →**](https://cris96spa.github.io/latent-writing-lab/) &nbsp;·&nbsp; or run `make doc` and open http://127.0.0.1:8031/
 
 </div>
 
 <br/>
 
-| You want to                            | Read                                                                                                       |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Write and publish an article           | **[The guide](https://cris96spa.github.io/latent-writing-lab/)**, with live figures, or `make doc` locally |
-| See how the kit fits together, and why | **[How it works](how-it-works.md)**, which follows one figure through every piece                          |
-| Look up a command or maintain the kit  | **[Reference](reference.md)**                                                                              |
+| Folder        | Holds                                                                       |
+| ------------- | --------------------------------------------------------------------------- |
+| `pages/`      | One MDX file per page, and `pages.json`, which sets their order in the menu |
+| `components/` | The navigation shared by every page                                         |
+| `embeds/`     | Figures only the documentation uses                                         |
+| `images/`     | The README animations, recorded with `npm run readme:media`                 |
 
-The guide's source sits in this folder too: `article.mdx` and `chapters/` hold its text,
-`embeds/` the figures only the guide uses, and `images/` the README animations.
+The [Workspace](https://cris96spa.github.io/latent-writing-lab/workspace/#this-documentation)
+page explains how the site is assembled and how to add a page.
 
 <br/>
 

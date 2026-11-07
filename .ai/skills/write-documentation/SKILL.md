@@ -1,6 +1,6 @@
 ---
 name: write-documentation
-description: Write or revise natural-language text in this repository, including README.md, the Markdown pages in docs/, the interactive guide chapters, figure titles and captions, AGENTS.md, pull request descriptions, commit messages and review reports. Use when asked to write, rewrite, review or restructure documentation or any prose meant for other readers.
+description: Write or revise natural-language text in this repository, including README.md, the documentation pages in docs/pages/, figure titles and captions, AGENTS.md, pull request descriptions, commit messages and review reports. Use when asked to write, rewrite, review or restructure documentation or any prose meant for other readers.
 ---
 
 # Write documentation
@@ -13,13 +13,12 @@ describes how to write for that reader: decide what kind of text you are produci
 where that reader looks, lead with the big picture, say only what the reader needs, and test
 everything you tell them to do.
 
-It applies to every text written in natural language here: `README.md`, the pages under
-`docs/`, the interactive guide in `docs/article.mdx` and `docs/chapters/`, figure titles and
-captions, `AGENTS.md` and the skills, pull request descriptions, commit message bodies and
+It applies to every text written in natural language here: `README.md`, the documentation
+pages in `docs/pages/`, figure titles and captions, `AGENTS.md` and the skills, pull request descriptions, commit message bodies and
 review reports. Code comments follow the same prose rules and explain why the code is the way
 it is, not what it does.
 
-The interactive guide and the longer pages take their model from the long-form guides that
+The documentation's longer pages take their model from the long-form guides that
 Hugging Face publishes on the same article engine: the Smol Training Playbook, the Ultra-Scale
 Playbook, the LLM Evaluation Guidebook and the Ultimate MoE Training Handbook. Their techniques
 for carrying a reader through a long text are collected in
@@ -39,8 +38,8 @@ for carrying a reader through a long text are collected in
    the repository.
 6. Review the draft with the checklist at the end, then cut until removing anything more
    would lose meaning.
-7. Run `npm run format`, `npm run docs:check` and, when the guide changed, `make doc-check`
-   and `npm run test:e2e`.
+7. Run `npm run format`, `npm run docs:check` and, when a documentation page changed,
+   `make doc-check` and `npm run test:e2e`.
 
 ## Know what you are writing
 
@@ -51,10 +50,10 @@ deserve.
 | Text                                                                | The reader asks                                   | Lead with                                   | Code and configs                                                                 |
 | ------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------- |
 | Landing page (`README.md`)                                          | What is this, and how do I start?                 | what it is, then the shortest path to a run | only the quick-start commands; everything else is a link                         |
-| Tutorial (the guide's first-article walkthrough)                    | Can I get something working?                      | the result the reader will have             | central: complete files to copy, with a visible result after each step           |
-| How-to guide (the guide's chapters)                                 | How do I do this?                                 | the task and its result                     | central: a working command or snippet, explained as the reader uses it           |
-| Reference (`docs/reference.md`, frontmatter fields)                 | What exactly does this accept or check?           | the contract                                | complete: every field, command and default, and what it does not cover           |
-| Explanation (`docs/how-it-works.md`)                                | How does this work, and why this way?             | the problem and the idea that solves it     | a detail: name a file or field only where the reader needs a handle on it        |
+| Tutorial (the overview's quick start)                               | Can I get something working?                      | the result the reader will have             | central: complete files to copy, with a visible result after each step           |
+| How-to guide (Writing, Interactive figures, Publishing)             | How do I do this?                                 | the task and its result                     | central: a working command or snippet, explained as the reader uses it           |
+| Reference (component and prop tables, commands, frontmatter fields) | What exactly does this accept or check?           | the contract                                | complete: every field, command and default, and what it does not cover           |
+| Explanation (the overview's three rules, the Workspace page)        | How does this work, and why this way?             | the problem and the idea that solves it     | a detail: name a file or field only where the reader needs a handle on it        |
 | Figure title and caption (`HtmlEmbed` `title` and `desc`, registry) | What am I looking at, and can I trust it?         | the claim the figure supports               | none; state the data source, and say when values are illustrative                |
 | Agent instructions (`AGENTS.md`, `CLAUDE.md`, `.ai/skills/`)        | What must I do or avoid here?                     | the rule, with its reason when not obvious  | paths and commands exactly as they are typed                                     |
 | Pull request description                                            | What changes, why, and what should I look at?     | the motivation and the design               | rarely: a snippet earns its place only as the clearest statement of an interface |
@@ -77,16 +76,13 @@ without adding understanding.
 
 ## Put each fact in one place
 
-The documentation has two surfaces with different readers. The interactive guide, served by
-`make doc`, is for authors writing an article: it runs on the article engine, so it can show
-live figures next to the instructions that use them. Tutorials and how-to guides about
-writing, figures, conventions and publishing belong there. The Markdown pages in `docs/` are
-for people running or changing the kit and for anyone browsing the repository on GitHub, who
-can read them without installing anything. There are two: `how-it-works.md` is the one
-explanation, a narrative that follows one figure through every piece of the kit, and
-`reference.md` holds the commands, checks, CI, engine updates and documentation procedures.
-Add to one of them before adding a page. `README.md` introduces the project and points to all
-three.
+The documentation is one site, served by `make doc` and published on GitHub Pages. It runs on
+the article engine, so every capability it describes can be shown live next to its source. Each
+page in `docs/pages/` owns one part of the kit: Overview, Writing, Components, Interactive
+figures, Publishing and Workspace. Put a fact on the page whose reader needs it, and add to an
+existing page before adding a new one. Keep examples neutral: they demonstrate the capability,
+not a research topic. `README.md` introduces the project to visitors on GitHub and links to the
+site; `docs/README.md` explains the folder.
 
 Give each fact one home, chosen by the reader who needs it, and link to it from anywhere else
 it matters. Two copies of a port number, a file path or a procedure drift apart, and the reader
@@ -99,14 +95,14 @@ Before writing, tell yourself the story in three or four sentences: what problem
 this does about it, how it works at the level a newcomer needs, and what follows from it.
 That story becomes the opening, and every later section expands one part of it.
 
-Give the context before the claim. "The guide runs on a staged copy" means nothing until the
+Give the context before the claim. "The docs run on a staged copy" means nothing until the
 reader knows why serving it in place would be wrong. Describe the situation first, and the
 decision it leads to second:
 
 > The article engine reads its content from fixed paths under `app/src/content`, through both
-> module imports and filesystem reads. Serving the guide from that directory would mean
-> swapping out the author's article, so `tools/docs.mjs` stages a copy of the engine in
-> `.cache/` with the guide's chapters in place of the article's.
+> module imports and filesystem reads. Serving the documentation from that directory would
+> mean swapping out the author's article, so `tools/docs.mjs` stages a copy of the engine in
+> `.cache/` with the documentation pages in place of the article.
 
 Within a paragraph, start from what the reader already knows and end on what is new, so the
 next sentence can pick up where this one stopped. Open every paragraph with a sentence that
@@ -117,7 +113,7 @@ a list of nouns.
 ## Guide the reader through a long text
 
 The Hugging Face playbooks keep readers with them across tens of thousands of words, and the
-techniques they use work as well for a five-chapter guide or a long page in `docs/`.
+techniques they use work as well for a multi-page documentation site or a single long page.
 
 Open with the question the reader brings, or with a claim and its evidence, and then say what
 the text gives them. The evaluation guidebook opens on "How can one know if a model is
@@ -158,7 +154,7 @@ but introduces each metric in the section that first uses it.
 Show the destination early. The Ultra-Scale Playbook puts its memory calculator in the
 introduction and tells readers not to worry if it means nothing yet, because the book is
 there to explain it. A live figure or a finished result near the top shows readers what they
-will be able to do. In this guide, the function plotter in the overview plays that role.
+will be able to do. In this documentation, the drawable network at the top of the overview plays that role.
 
 After a long stretch of explanation, turn it into a recipe. The Ultra-Scale Playbook pauses at
 "Our journey up to now" for a numbered recipe built from the previous sections, followed by a
@@ -238,7 +234,7 @@ A few habits make prose easier to follow:
 
 - Use one term per concept, and define it once. If it is "the standalone figure page" in one
   paragraph, it is not "the figure route" in the next.
-- Prefer plain words to coined phrases. "The guide's working copy" is clearer than "the
+- Prefer plain words to coined phrases. "The documentation's working copy" is clearer than "the
   staging mirror mechanism".
 - Name a code identifier when the reader will search for it, type it or see it in a log;
   otherwise name the concept. In an explanation, "the embed component" reads better than
@@ -252,8 +248,8 @@ A few habits make prose easier to follow:
   section or a decision; a run of rhetorical questions reads as stalling.
 - Leave out "simply", "just", "easy" and "obviously". They add nothing for a reader who
   succeeds and tell a reader who struggles that the fault is theirs.
-- Make link text say where it goes: `see the [engine update procedure](reference.md#update-the-engine)`, not
-  `click [here](reference.md#update-the-engine)`. Readers scan links, and screen readers list them out of
+- Make link text say where it goes: `see the [engine update procedure](/workspace/)`, not
+  `click [here](/workspace/)`. Readers scan links, and screen readers list them out of
   context.
 - Split a sentence that needs parentheses, stacked qualifications or a chain of semicolons
   into two.
@@ -297,8 +293,8 @@ three relevant lines of frontmatter rather than the whole file.
 
 In tutorials, how-to guides and references the example is often the main content, so it must
 be complete, runnable and correct for the path where the reader puts it. Import paths in MDX
-depend on the chapter's folder, so state that folder next to the snippet. The guide cannot
-include repository files, which means its snippets are copies: keep each one identical to a
+depend on the chapter's folder, so state that folder next to the snippet. The documentation
+cannot include repository files, which means its snippets are copies: keep each one identical to a
 file that builds, and update `e2e/docs.spec.ts` when a snippet it checks changes. In
 explanations and pull request descriptions, a sentence that names the idea is usually better
 than the code that implements it.
@@ -309,26 +305,27 @@ what. Draw one idea per diagram, label it in plain words rather than identifiers
 small enough to read without scrolling. A diagram that restates a three-item list adds
 nothing.
 
-The file type decides how to draw it. In MDX, which means the guide and article chapters,
+The file type decides how to draw it. In MDX, which means documentation pages and article
+chapters,
 draw the diagram as an HTML embed placed with `HtmlEmbed`, never as a Mermaid fence. An embed
 follows the theme through the template's CSS variables, switches to a layout that fits a
 phone, can highlight the part of the structure the prose is discussing, and prints through the
 PDF exporter's screenshot of its opening state. Mermaid gives none of that, so in MDX it is
 always the weaker figure. Treat a diagram embed like any other figure: one source file, a
 model kept apart from the rendering code, accessible controls and a tested interaction.
-Figures used only by the guide live in `docs/embeds/`, which the guide's working copy merges
-with the article's embeds; a name shared with an article embed stops the guide from starting.
+Figures used only by the documentation live in `docs/embeds/`, which its working copy merges
+with the article's embeds; a name shared with an article embed stops the build.
 
-Mermaid fences belong only in plain Markdown, such as `README.md`, the pages in `docs/` and
-pull request descriptions, where GitHub renders them and an embed cannot run. There, keep
+Mermaid fences belong only in plain Markdown, such as `README.md`, `docs/README.md` and pull
+request descriptions, where GitHub renders them and an embed cannot run. There, keep
 every label to a few words, at most about 25 characters per line, and break a longer one with
 `<br/>`. Mermaid widens a node to fit its text, but it does not wrap subgraph titles or edge
 labels, which are cut off or run over other shapes when they are long. In both formats, a
 label names a step; the explanation of the step belongs in the prose around the diagram.
 
-## Use the guide's components with intent
+## Use the components with intent
 
-The guide and the article share the template's components, and each one has a job.
+The documentation and the article share the template's components, and each one has a job.
 
 - `Accordion` holds what only some readers need: installing tools, an optional derivation, a
   complete file to copy. The main text must read as a whole with every accordion closed, and
@@ -343,15 +340,16 @@ The guide and the article share the template's components, and each one has a jo
 - `Sidenote` and `Glossary` carry a short clarification, a source, an aside or a definition
   without breaking the argument.
 - A live `HtmlEmbed` needs a sentence that says what to try and what changes as a result,
-  such as "Set Active experts to 1: the top expert receives all of the weight".
+  such as "Draw a digit: the network classifies it as you draw".
 - Every image needs alt text that conveys its information and a caption that states its role
   and source.
 
-Some guide text is a test fixture. `e2e/docs.spec.ts` checks the guide's title, the title of
-the first-article heading and its import line, the setup accordion's title, the figure ids
-`guide-rules` and `guide-routing`, the rule button labels in
-`docs/embeds/guide-three-rules.html`, and the text of the link to the standalone routing
-figure. Change the test in the same commit when you change any of them.
+Some documentation text is a test fixture. `e2e/docs.spec.ts` visits every page in
+`docs/pages/pages.json`, operates the figures with the ids `docs-showcase`, `docs-rules`,
+`docs-plotter` and `docs-routing`, presses the rule buttons in
+`docs/embeds/guide-three-rules.html`, opens the "Start your own article project" accordion and
+follows the link to the standalone function plotter. Change the test in the same commit when you
+change any of them.
 
 ## Structure and length
 
@@ -386,8 +384,8 @@ opens with the purpose and lets the details follow from it:
 > controls and keep their mathematical invariants, in both themes and on a phone-sized
 > screen.
 
-The rewrite drops the delegation detail, which belongs in [How it
-works](../../../docs/how-it-works.md), and adds the reasoning that the original left out.
+The rewrite drops the delegation detail, which belongs on the [Workspace
+page](../../../docs/pages/workspace.mdx), and adds the reasoning that the original left out.
 
 ## Before you publish
 
@@ -409,7 +407,7 @@ Read the text again as its reader would, and check:
 - whether you ran every command and snippet, and each step says what the reader should see;
 - whether each fact has one home, and the other pages link to it rather than repeat it;
 - whether placeholders are marked and no credentials or personal details appear;
-- whether `npm run docs:check` passes and the guide tests still match the guide's text.
+- whether `npm run docs:check` passes and the documentation tests still match the pages.
 
 ## References
 

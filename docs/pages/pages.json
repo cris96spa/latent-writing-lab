@@ -1,0 +1,8 @@
+[
+  { "file": "index.mdx", "label": "Overview" },
+  { "file": "writing.mdx", "label": "Writing" },
+  { "file": "components.mdx", "label": "Components" },
+  { "file": "interactive-figures.mdx", "label": "Interactive figures" },
+  { "file": "publishing.mdx", "label": "Publishing" },
+  { "file": "workspace.mdx", "label": "Workspace" }
+]

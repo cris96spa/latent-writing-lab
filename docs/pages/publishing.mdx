@@ -1,0 +1,171 @@
+---
+title: "Publishing"
+subtitle: "Check the build, export a PDF or LaTeX, and put the article online."
+description: "Checks, browser tests, CI, exports and hosting."
+authors: []
+template: "article"
+showPdf: false
+licence: "Built with Thibaud Frere's research-article-template (CC BY 4.0)."
+---
+
+import Accordion from "../../components/Accordion.astro";
+import Note from "../../components/Note.astro";
+
+## Readers get the build
+
+`npm run dev` compiles each page on request from your live source, which makes it the right tool
+for writing and the wrong one for checking. Readers receive what `npm run build` writes to
+`app/dist`: a static site with no server code, in both themes, plus any PDF you export from it.
+Publishing is therefore three steps in a fixed order: check the build, export from it, and put it
+online.
+
+## Check the build
+
+Each command answers a different question:
+
+| Command            | Answers                                                                  |
+| ------------------ | ------------------------------------------------------------------------ |
+| `npm run check`    | Are the engine files unmodified, the project formatted, the build clean? |
+| `make doc-check`   | Do the documentation links resolve, and does this site build?            |
+| `npm run test:e2e` | Do the article and figures behave in a real browser?                     |
+| `npm run preview`  | What exactly will readers get? Serves `app/dist` at port 8080.           |
+
+Install the test browser once, then run the checks in this order, since the tests serve the
+builds the first two commands produce:
+
+```sh
+npx playwright install chromium
+npm run format
+npm run check
+make doc-check
+npm run test:e2e
+```
+
+A passing check ends with the build:
+
+```text
+Verified 98 upstream files and 3 standalone figures. Astro validates and compiles MDX during build.
+...
+[build] 5 page(s) built in 5.32s
+[build] Complete!
+```
+
+The browser tests live in `e2e/`. `article.spec.ts` covers the article and its figure pages, and
+`docs.spec.ts` covers this documentation. They switch themes, shrink the page to phone width,
+operate controls and read the results, and they serve D3 locally, so the network never decides
+a result. When you replace the demonstration with your own article, the first test fails, because
+it expects the demonstration's title. Replace it with a test of your own article, as shown in
+[Test what the figure claims](/interactive-figures/#test-what-the-figure-claims).
+
+No check can tell whether a sentence is true or a figure makes its point. That review happens in
+a pull request, where CI repeats every check on Node 22 and 24 and keeps the builds and test
+reports as downloadable artifacts for 14 days.
+
+## Export a PDF, LaTeX or images
+
+The PDF exporter opens the built article in Chromium and replaces every figure with a screenshot
+of its publication state, the state it opens in. Build first, and stop any preview on port 8080,
+because the exporter starts its own:
+
+```sh
+npm run build
+npm run export:pdf -- --filename=article --theme=light --wait=full
+```
+
+```text
+📸 Screenshotting embeds…
+   2 embed(s) replaced with screenshots
+...
+✅ PDF generated: …/app/dist/article.pdf
+```
+
+Read the PDF before you publish it: equations, captions, page breaks and figure widths. Wide
+charts can be clipped, and iframes rarely print usefully. The exporter also writes the social
+preview thumbnails.
+
+| Output        | Command                                                 | Needs                 |
+| ------------- | ------------------------------------------------------- | --------------------- |
+| PDF           | `npm run export:pdf -- --filename=article`              | Chromium              |
+| LaTeX         | `npm run export:latex -- --filename=article`            | Pandoc                |
+| LaTeX and PDF | `npm run export:latex -- --filename=article --pdf`      | Pandoc and `pdflatex` |
+| Figure images | `npm run export:images`, with `npm run preview` running | Chromium              |
+
+Images are written to `app/screenshots/`. Generated files are ignored by Git, so a fresh build
+or container does not contain a PDF you exported locally; ship the reviewed export with the
+site. The `article` layout's download button links to a file named after the title, so keep the
+exporter's default name or link to your own.
+
+## Put it online
+
+<Note title="Nothing publishes on its own" variant="danger">
+  CI builds and tests every push but never deploys your article.
+  Deployment is always a step you take, on a revision you have
+  reviewed.
+</Note>
+
+**Any static host.** Deploy the whole of `app/dist/` at the root of a domain, keeping `_astro`,
+`data`, `scripts` and the figure pages together. The site loads its files from root-relative
+addresses, so it needs a domain or subdomain of its own.
+
+**A container.** The supplied Dockerfile builds the article and serves it with nginx:
+
+```sh
+docker build -t my-article .
+docker run --rm -p 8080:8080 my-article
+```
+
+**A Hugging Face Space.** Spaces run the same container, and the template is listed in the
+Hugging Face gallery of research articles.
+
+<Accordion title="Publish on a Hugging Face Space">
+
+Create a **Docker Space**, then add its settings as a YAML block at the very top of the root
+`README.md`, before the first heading:
+
+```yaml
+---
+title: YOUR ARTICLE TITLE
+sdk: docker
+app_port: 8080
+tags:
+  - research-article-template
+---
+```
+
+Push your reviewed commits to the Space:
+
+```sh
+git remote add hf https://huggingface.co/spaces/YOUR-OWNER/YOUR-SPACE
+git push hf HEAD:main
+```
+
+The push publishes the revision as soon as the Space has built it, so push only what you have
+reviewed. Keep tokens out of remote addresses and source files. The image does not generate a
+PDF during its build.
+
+</Accordion>
+
+For canonical addresses and a sitemap on your own domain, set the site's origin in the Astro
+configuration. After deploying, open the public page as a reader would: on a phone, in both
+themes, with its downloads.
+
+## When something looks wrong
+
+The stage where a problem appears narrows down its cause:
+
+| Where         | What you see                     | What to try                                                     |
+| ------------- | -------------------------------- | --------------------------------------------------------------- |
+| Preview       | A chapter is missing             | Import it and place its tag in `article.mdx`.                   |
+| Preview       | `Embed not found`                | Match `src` to a file under `embeds/`, including case.          |
+| Preview       | An empty chart                   | Check the browser console and the `/data/...` response.         |
+| Preview       | A stale import error             | Restart the development server.                                 |
+| Build         | MDX will not compile             | Check imports, unclosed tags, braces and code fences.           |
+| Build         | A citation does not resolve      | Match its key to a record in `bibliography.bib`.                |
+| Check         | A provenance check fails         | Review the named engine file; never re-record its hash blindly. |
+| Production    | The page shows old text          | Rebuild; `npm run preview` serves the last build.               |
+| Deployed site | A figure works locally, not live | Figures load D3 from a CDN, which must be reachable.            |
+| Deployed site | The PDF download is missing      | Deploy the exported PDF with the site.                          |
+
+The demonstration article references one chart upstream never shipped, so it shows
+`Embed not found` in one place, as the live upstream page does. Some demonstrations load
+libraries from CDNs or frame external pages, so not every example works offline.
