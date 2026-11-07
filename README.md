@@ -136,9 +136,9 @@ Three rules keep it predictable:
 
 1. Click **Use this template** to create a repository for your article.
 2. Clone it, then run `npm ci` and `npm run dev`.
-3. Replace the demo with your first chapter, as the docs'
-   [quick start](https://cris96spa.github.io/latent-writing-lab/#quick-start) shows in two
-   files.
+3. Run `make demo-remove`. The demo article goes, and a one-chapter starter with a passing
+   test takes its place; the docs' [quick start](https://cris96spa.github.io/latent-writing-lab/#quick-start)
+   shows what it writes.
 4. In **Settings → Pages**, set **Source** to **GitHub Actions**. From then on, every merge that
    passes the checks is live at `https://OWNER.github.io/REPOSITORY/`. Any static host, a
    Hugging Face Space or the included Docker image work too.

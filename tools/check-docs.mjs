@@ -28,4 +28,13 @@ for (const file of files) {
     await access(resolve(dirname(file), href));
   }
 }
-console.log(`Checked local links in ${files.length} documentation files.`);
+// The overview's quick start shows the starter that `make demo-remove` writes; keep them equal.
+const overview = await readFile("docs/pages/index.mdx", "utf8");
+const examples = [...overview.matchAll(/^```mdx\n([\s\S]*?)^```/gm)].map((match) => match[1]);
+const starter = ["tools/starter/article.mdx", "tools/starter/chapters/intro.mdx"];
+for (const [i, file] of starter.entries()) {
+  if (examples[i] !== (await readFile(file, "utf8"))) {
+    throw new Error(`The quick start in docs/pages/index.mdx no longer matches ${file}.`);
+  }
+}
+console.log(`Checked local links in ${files.length} documentation files and the quick start.`);

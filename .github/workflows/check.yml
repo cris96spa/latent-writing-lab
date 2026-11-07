@@ -47,6 +47,22 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  demo-remove:
+    name: Validate a project after make demo-remove
+    # Only the starter carries the demo; this proves a new project can remove it and still pass.
+    if: github.event.repository.is_template
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # The removal refuses to run over uncommitted changes, and a fresh checkout has none.
+      - name: Validate the starter project
+        uses: ./.github/actions/validation
+        with:
+          node-version: 24
+          remove-demo: "true"
+
   pages-build:
     name: Build the site for GitHub Pages
     needs: check
