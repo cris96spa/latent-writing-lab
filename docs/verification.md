@@ -16,6 +16,12 @@ the current source. Review page breaks, formulas, captions and meaningful figure
 in each publication format. A successful web build alone does not verify publication
 quality or scientific claims.
 
-GitHub CI uploads the static build and test reports. It does not deploy, publish a
+GitHub CI runs the reusable `.github/actions/validation` action on Node.js 22 and 24
+for pushes, pull requests and manual runs. It follows the validation-action and runtime-matrix
+structure of [python-repo-template](https://github.com/cris96spa/python-repo-template/tree/bb9485eaefb7c264e265ace293024547a3404695/.github).
+The action performs a clean npm install, project checks, documentation checks and browser tests.
+Actions are pinned to commit revisions, runs have read-only repository permissions, and
+superseded runs on the same ref are cancelled. Each matrix job uploads its own static
+build and browser reports for 14 days. It does not deploy, publish a
 package or push a container. Local execution results are reported with each task;
 this document describes the checks rather than claiming they have all passed.
