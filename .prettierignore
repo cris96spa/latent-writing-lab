@@ -1,0 +1,3 @@
+# Preserve upstream demonstration source formatting.
+app/src/content/chapters/demo/
+app/src/content/chapters/your-first-chapter.mdx

@@ -20,6 +20,15 @@ appear in an article or a standalone page for another website.
 
 ## Start writing
 
+Use one repository per independently published article project. See the
+[project workflow](docs/workflow.md) for creating a project from the template,
+working on drafts, publishing, and keeping reused figures in one owning project.
+
+Start with the [first-article walkthrough](docs/first-article.md). The page at `/`
+is the complete upstream template demonstration, including its chapters, component
+examples, charts, images and datasets. General conventions are in [Authoring](docs/authoring.md),
+and figure reuse is in [Integration](docs/integration.md).
+
 Use Node 22.12+ (Node 22 LTS recommended) and npm:
 
 ```sh

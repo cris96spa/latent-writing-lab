@@ -1,5 +1,9 @@
 # Authoring
 
+For an end-to-end example, follow [Your first article](first-article.md).
+For repository creation, drafts, publishing and shared figures, see
+[Project and publishing workflow](workflow.md).
+
 The native research article template is the publishing engine. Use its components,
 frontmatter and export scripts directly. The upstream
 [documentation](https://tfrere-research-article-template-site.hf.space/docs) and
@@ -11,6 +15,9 @@ Put metadata and chapter imports in `app/src/content/article.mdx`. Write chapter
 in `app/src/content/chapters/`. Use native MDX imports, components, Markdown,
 LaTeX math, and citations such as `[@hf-moe]`. References belong in
 `app/src/content/bibliography.bib`.
+
+The default entry point renders the upstream demo chapters in `chapters/demo/`.
+Use them as reference examples; replace the imports with your own chapters to write.
 
 This is one article per project, with `article` and `paper` layouts. The complete
 article is served at `/`. There is no draft flag or automatic translation layer:
@@ -54,27 +61,8 @@ Use one embed source for the article and any standalone figure page.
 
 Standalone routes are optional. Register their source, title, description and language
 in `app/src/content/figures.json`. New article-only embeds need no registry entry.
-
-## Latent Space homepage example
-
-Open `/figures/forward-pass/` for the detailed homepage hero. Its single source is
-`app/src/content/embeds/d3-forward-pass.html`; use
-`<HtmlEmbed src="d3-forward-pass.html" frameless wide />` in an MDX chapter.
-The registry's optional `frameless` property lets a figure supply its own heading
-and card. Another website can reuse the standalone URL in an iframe.
-
-The embed includes the original deterministic storyboard, desktop and compact SVG
-layouts, playback, token IDs, output highlighting and theme-aware colors. Its scoped
-palette and bundled Inter/JetBrains Mono fonts preserve Latent Space's design.
-The fixed tokenizer snapshot and source attribution live in
-`app/src/content/assets/data/forward-pass/`. Editing the prompt or biography requires
-recapturing its tokenization; this example does not provide live inference.
-
-The article uses `config={{ autoplay: false }}` to start at the completed biography,
-so the native exporter can capture a deterministic frame before printing. The standalone
-page autoplays when visible. Reduced motion starts at the completed biography. Readers can still scrub manually.
-Printing selects the completed text state and restores the interactive state afterward.
-`npm run test:models` checks the shipped storyboard's scientific invariants.
+The optional `frameless` property lets a standalone figure supply its own heading
+and card through the native component.
 
 ## Checks and exports
 

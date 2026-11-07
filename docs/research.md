@@ -7,8 +7,6 @@ including actual figure bundles, not just the article's dependency manifest.
 
 - Hugging Face Space: `https://huggingface.co/spaces/huggingface/moe-blogpost`
   at commit `ef70726e6f8b99d74298a16a4894340f288a58c2`.
-- Personal site: `https://github.com/cris96spa/latent-space`
-  at commit `db0d2bc83743748efe220886b3fbd603541a9f74`.
 
 ## Verified layers
 
@@ -47,19 +45,6 @@ Useful source links:
 The article manifest declares CC-BY-4.0. The gallery source/provenance boundary is
 not fully established by that manifest alone. This workspace copies no MoE gallery bundles or article text. Its research-template
 demonstrations are separately attributed in the article and baseline guide.
-
-## What latent-space already has
-
-The site is React 19 + TypeScript + Vite. Its forward-pass hero already separates
-frames, numerical/sampling logic, layout and React/SVG panels. This is a useful starting
-pattern, not a system that needs replacement. `PlaybookBanner.tsx` is custom SVG;
-`PolarityRadar.tsx` uses Plotly. The visual code is currently organized around site
-features rather than a portable visualization package.
-
-- [Frontend dependencies](https://github.com/cris96spa/latent-space/blob/db0d2bc83743748efe220886b3fbd603541a9f74/frontend/package.json)
-- [Forward-pass diagram](https://github.com/cris96spa/latent-space/blob/db0d2bc83743748efe220886b3fbd603541a9f74/frontend/src/features/forward-pass-hero/PipelineDiagram.tsx)
-- [Diagram layout](https://github.com/cris96spa/latent-space/blob/db0d2bc83743748efe220886b3fbd603541a9f74/frontend/src/features/forward-pass-hero/diagram/layout.ts)
-- [Writing index](https://github.com/cris96spa/latent-space/blob/db0d2bc83743748efe220886b3fbd603541a9f74/frontend/src/pages/WritingPage.tsx)
 
 ## Authoring foundation
 

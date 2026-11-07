@@ -7,7 +7,7 @@ also hosted on [Hugging Face](https://huggingface.co/spaces/tfrere/research-arti
 the delegated implementation. `npm run content:check` detects unexpected edits to it.
 
 Upstream components, styles, plugins, scripts and authoring skills retain their
-source and license. `LICENSE` contains the upstream CC BY 4.0 terms. The banner,
+source and license. `LICENSE` contains the upstream CC BY 4.0 terms. The decorative banner,
 matrix and function plotter are upstream demonstration embeds. Visible captions
 and this document credit Thibaud Frere. The local routing embed and standalone page
 are project extensions.
@@ -15,9 +15,27 @@ are project extensions.
 The application manifest adds `private: true` to prevent accidental npm publication
 and binds the preview server to localhost. Development also binds to localhost.
 The root workspace owns the shared lockfile, verification commands, CI and the
-static container setup. Demo datasets and binary LFS assets are not required by
-the included article. Obtain their actual data and provenance before using an
-upstream example that depends on them.
+static container setup.
+
+## Demonstration content
+
+The landing page includes the upstream article and all of its demonstration chapters,
+embeds, images, audio and datasets at the pinned revision. `demoContent` in the provenance
+file records the source and checksums of the materialized assets. These are ordinary
+repository files, so a fresh checkout needs no Git LFS download to run the demo.
+The upstream demo chapter formatting is preserved by `.prettierignore`.
+
+The article retains the upstream author credit and example metadata, including its
+sample DOI. Replace that metadata when writing your own article. PDF downloads are
+hidden until a matching export is provided. Local optional examples and bibliography
+entries coexist with the upstream demo; the engine files retain their pinned hashes.
+
+The upstream snapshot references `d3-hf-citations.html` and `hf_citations.csv` but does
+not supply them. Its live page also displays an “Embed not found” message for that
+example. This workspace preserves that source rather than fabricating a chart or data.
+Third-party iframe demonstrations and CDN dependencies require network access.
+The native PDF export can clip wide demo charts, including the Sankey example.
+Review figure widths and page breaks before using an export for publication.
 
 ## Reviewing upstream updates
 

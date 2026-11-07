@@ -1,11 +1,11 @@
 # Verification
 
 `npm run check` verifies pinned upstream implementation files and standalone figure
-metadata, checks formatting of project-owned files and storyboard invariants, and builds with the native Astro
+metadata, checks formatting of project-owned files, and builds with the native Astro
 pipeline. `npm run docs:check` checks local documentation links.
 
 `npm run test:e2e` runs Playwright against the production preview. Coverage includes
-math and citations, native embeds, navigation to standalone figures, normalization
+the full upstream demo, its local image/data assets, native embeds, standalone figures, normalization
 and temperature invariants, accessible controls, narrow viewports and theme changes.
 Browser tests serve the installed D3 package at the CDN URL for deterministic testing.
 Production uses the template's CDN dependencies; those require a separate online check.
