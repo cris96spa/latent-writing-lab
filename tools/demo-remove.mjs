@@ -22,16 +22,20 @@ if (!(await exists("app/src/content/chapters/demo"))) {
   console.log("The demo is already removed.");
   process.exit(0);
 }
-// The entry file is still the template's only while it imports demo chapters and nothing else.
-// A commented-out import does not count: MDX imports start a line, comments do not.
+// The entry file is still the template's only while every import it makes is a demo chapter.
+// Imports inside MDX comments and code fences do not count, and every import form does, such
+// as `import { default as Results } from "./chapters/results.mdx"`.
 const entry = await readFile(at("app/src/content/article.mdx"), "utf8");
-const chapters = [...entry.matchAll(/^import\s+\w+\s+from\s+["']\.\/chapters\/([^"']+)["']/gm)].map(
+const live = entry
+  .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
+  .replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1[^\n]*$/gm, "");
+const sources = [...live.matchAll(/^import\b[^;]*?\bfrom\s*["']([^"']+)["']/gm)].map(
   (match) => match[1],
 );
-const own = chapters.filter((chapter) => !chapter.startsWith("demo/"));
-if (own.length || !chapters.length) {
+const own = sources.filter((source) => !source.startsWith("./chapters/demo/"));
+if (own.length || !sources.length) {
   stop(
-    `article.mdx ${own.length ? `imports your own chapters (${own.join(", ")})` : "no longer imports the demo"}, so it holds your own article. Remove the demo files listed in tools/demo.json by hand.`,
+    `article.mdx ${own.length ? `imports ${own.join(", ")}` : "no longer imports the demo"}, so it holds your own article. Remove the demo files listed in tools/demo.json by hand.`,
   );
 }
 if (await exists("app/src/content/chapters/intro.mdx")) {

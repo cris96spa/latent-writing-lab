@@ -33,7 +33,7 @@ runs:
     - name: Test the template update command
       run: npm run test:tools
       shell: bash
-    - name: Build the interactive guide
+    - name: Build the documentation
       run: npm run docs:build
       shell: bash
     - name: Install Chromium

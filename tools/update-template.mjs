@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { readdirSync, rmSync, rmdirSync } from "node:fs";
+import { existsSync, readdirSync, rmSync, rmdirSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,9 +12,11 @@ import { parseArgs } from "node:util";
 // command grafts the project's first commit onto the template commit it was created from (or
 // last synced to), so the template's newer commits become an ordinary merge. It squash-merges
 // them into an `update-template` branch, records the new reference in package.json, and pushes
-// the branch for review. The graft and the template remote are temporary and always removed.
+// the branch for review. The graft and the temporary remote are always removed.
 const DEFAULT_TEMPLATE_URL = "https://github.com/cris96spa/latent-writing-lab.git";
 const UPDATE_BRANCH = "update-template";
+// A temporary remote, named so it cannot clash with one the project already uses.
+const REMOTE = "update-template-source";
 // The article belongs to the project: template changes to these paths are never applied.
 const PROJECT_PATHS = ["app/src/content", "e2e/article.spec.ts", "README.md"];
 
@@ -60,6 +62,25 @@ function keepProjectPaths() {
       }
     }
   }
+}
+
+const unmerged = () => git("diff", "--name-only", "--diff-filter=U").split("\n").filter(Boolean);
+
+// Record the template commit the project now matches, so the next update starts from it.
+async function record(template) {
+  const manifest = JSON.parse(await readFile(packagePath, "utf8"));
+  manifest.template = template;
+  await writeFile(packagePath, `${JSON.stringify(manifest, null, 2)}\n`);
+  git("add", "package.json");
+}
+
+function push(base) {
+  if (gitStatus("push", "--set-upstream", "origin", UPDATE_BRANCH) !== 0) {
+    stop(`The update is committed on '${UPDATE_BRANCH}', but pushing it failed; push it by hand.`);
+  }
+  console.log(
+    `Pushed '${UPDATE_BRANCH}'. Open a pull request into '${base}', and review it like any change.`,
+  );
 }
 
 // Failures throw rather than exit, so the `finally` blocks always remove the graft and remote.
@@ -143,6 +164,8 @@ async function update() {
   if (git("status", "--porcelain", "--untracked-files=no")) {
     stop("Commit or stash your changes first; the update starts from a clean working tree.");
   }
+  // Kept inside .git, so it is never committed.
+  const statePath = join(git("rev-parse", "--absolute-git-dir"), "update-template.json");
   const current = git("rev-parse", "--abbrev-ref", "HEAD");
   const resuming = current === UPDATE_BRANCH;
   if (resuming) {
@@ -156,40 +179,57 @@ async function update() {
     }
   }
 
+  // A run that stopped on conflicts saved the template commit it reached. Once the conflicts are
+  // resolved and committed, the update is complete: record that commit and push, without
+  // merging again.
+  if (resuming && existsSync(statePath)) {
+    const state = JSON.parse(await readFile(statePath, "utf8"));
+    await record(state);
+    if (git("diff", "--staged", "--name-only")) {
+      git("commit", "-m", `chore: update from template ${state.commit.slice(0, 7)}`);
+    }
+    rmSync(statePath);
+    return push(base);
+  }
+  rmSync(statePath, { force: true });
+
   // --- Merge the template's changes ------------------------------------------------------------
 
   let conflicts = [];
   let reference = values.commit;
-  if (succeeds("remote", "get-url", "template")) git("remote", "remove", "template");
-  git("remote", "add", "template", templateUrl);
+  let latest;
+  if (succeeds("remote", "get-url", REMOTE)) {
+    stop(`A remote named '${REMOTE}' already exists; remove or rename it, then try again.`);
+  }
+  git("remote", "add", REMOTE, templateUrl);
   try {
-    git("remote", "set-url", "--push", "template", "DISABLE");
-    if (gitStatus("fetch", "--no-tags", "template", branch) !== 0)
+    git("remote", "set-url", "--push", REMOTE, "DISABLE");
+    if (gitStatus("fetch", "--no-tags", REMOTE, branch) !== 0)
       stop("Fetching the template failed.");
     if (!reference) {
       // First update: the template commit current when the project was created.
       const created = git("log", "--reverse", "--format=%cI", `origin/${base}`).split("\n")[0];
-      reference = git("rev-list", "-n", "1", `--before=${created}`, `template/${branch}`);
+      reference = git("rev-list", "-n", "1", `--before=${created}`, `${REMOTE}/${branch}`);
       if (!reference) stop("Could not estimate the template commit; pass it with --commit.");
       console.log(`Estimated the template commit the project started from: ${reference}`);
     }
     git("replace", "--graft", firstCommit, reference);
     try {
-      // Git reports conflicts in the project's own paths too; those are resolved next, so show
-      // its report only if real conflicts remain.
-      const merge = spawnSync("git", ["merge", "--squash", "--no-commit", `template/${branch}`], {
+      const merge = spawnSync("git", ["merge", "--squash", "--no-commit", `${REMOTE}/${branch}`], {
         cwd: root,
         encoding: "utf8",
       });
+      const report = merge.stdout + merge.stderr;
+      // A failed merge with nothing left unmerged never started, for example because an
+      // untracked file is in the way. Stop before recording a template commit never applied.
+      if (merge.status !== 0 && !unmerged().length)
+        stop(`Git could not merge the template:\n${report}`);
+      // Git reports conflicts in the project's own paths too; those are resolved next, so show
+      // its report only if real conflicts remain.
       keepProjectPaths();
-      conflicts = git("diff", "--name-only", "--diff-filter=U").split("\n").filter(Boolean);
-      if (conflicts.length) process.stderr.write(merge.stdout + merge.stderr);
-      const latest = git("rev-parse", `template/${branch}`);
-      const fresh = JSON.parse(await readFile(packagePath, "utf8"));
-      fresh.template = { repository: templateUrl, branch, commit: latest };
-      await writeFile(packagePath, `${JSON.stringify(fresh, null, 2)}\n`);
-      if (!conflicts.includes("package.json")) git("add", "package.json");
-      reference = latest;
+      conflicts = unmerged();
+      if (conflicts.length) process.stderr.write(report);
+      latest = git("rev-parse", `${REMOTE}/${branch}`);
     } finally {
       if (!succeeds("replace", "-d", firstCommit)) {
         console.error(
@@ -199,19 +239,23 @@ async function update() {
       }
     }
   } finally {
-    if (!succeeds("remote", "remove", "template")) {
-      console.error("Could not remove the temporary `template` remote; remove it by hand.");
+    if (!succeeds("remote", "remove", REMOTE)) {
+      console.error(`Could not remove the temporary '${REMOTE}' remote; remove it by hand.`);
     }
   }
 
   if (conflicts.length) {
+    // package.json may be among the conflicts, so record the template commit once they are
+    // resolved, on the next run.
+    await writeFile(statePath, JSON.stringify({ repository: templateUrl, branch, commit: latest }));
     stop(
       `The template's changes conflict with the project in:\n  ${conflicts.join("\n  ")}\n` +
         "Resolve them, stage and commit the result, then run make update-template again.",
     );
   }
+  await record({ repository: templateUrl, branch, commit: latest });
   if (git("diff", "--staged", "--name-only")) {
-    git("commit", "-m", `chore: update from template ${reference.slice(0, 7)}`);
+    git("commit", "-m", `chore: update from template ${latest.slice(0, 7)}`);
   } else if (!resuming) {
     // Nothing new: leave no empty branch behind.
     git("switch", "-q", base);
@@ -219,10 +263,5 @@ async function update() {
     console.log("The project already has every change from the template.");
     return;
   }
-  if (gitStatus("push", "--set-upstream", "origin", UPDATE_BRANCH) !== 0) {
-    stop(`The update is committed on '${UPDATE_BRANCH}', but pushing it failed; push it by hand.`);
-  }
-  console.log(
-    `Pushed '${UPDATE_BRANCH}'. Open a pull request into '${base}', and review it like any change.`,
-  );
+  push(base);
 }

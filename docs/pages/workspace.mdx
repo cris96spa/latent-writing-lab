@@ -103,10 +103,13 @@ date of the project's first commit. Pass options through `ARGS`, as in
 Your article belongs to you, so the update never changes `app/src/content`, `e2e/article.spec.ts`
 or `README.md`, even where the template changed them; it keeps them exactly as your last commit
 has them. When the template and your project changed the same lines elsewhere, the command
-stops and lists the files. Resolve them, stage and commit the result on `update-template`, and
-run the command again to finish. The graft and the temporary `template` remote are removed even
-when the command stops, so neither is ever pushed. When the project already has every change,
-the command says so and leaves no branch behind.
+stops and lists the files, `package.json` included. Resolve them, stage and commit the result on
+`update-template`, and run the command again: it records the template commit it reached and
+pushes, without merging again. When Git cannot start the merge at all, for example because an
+untracked file is in the way, the command stops without recording anything; move the file and
+run it again. The graft and the temporary `update-template-source` remote are removed even when
+the command stops, so neither is ever pushed, and a remote of yours is never touched. When the
+project already has every change, the command says so and leaves no branch behind.
 
 ## What lives where
 

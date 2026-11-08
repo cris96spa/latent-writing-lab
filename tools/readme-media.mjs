@@ -254,6 +254,15 @@ function readGif(gif) {
   };
 }
 
+// Record only servers this script starts: a site already answering on one of the ports would
+// otherwise be recorded in their place.
+for (const { origin } of Object.values(SITES)) {
+  const busy = await fetch(origin).then(
+    () => true,
+    () => false,
+  );
+  if (busy) throw new Error(`${origin} is already in use; stop the server running there first.`);
+}
 const servers = Object.values(SITES).map(({ script }) =>
   spawn("npm", ["run", script], { stdio: "ignore", detached: true }),
 );
@@ -292,6 +301,7 @@ try {
     }
   }
   await browser.close();
+  if (exited) throw new Error(`The server for ${exited} stopped while recording; rerun it.`);
 } finally {
   for (const server of servers) {
     try {
