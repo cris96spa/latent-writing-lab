@@ -81,7 +81,7 @@ Any figure can get its own page, ready to drop into another site with an iframe.
 <td width="33%" valign="top">
 
 **📄 Website and PDF**<br/>
-One build gives a static site in light and dark, a PDF and LaTeX, with figures captured for print.
+A static site in light and dark, plus PDF and LaTeX exports, with figures captured for print.
 
 </td>
 <td width="33%" valign="top">

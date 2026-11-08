@@ -20,15 +20,15 @@ Markdown, math in LaTeX and sources in BibTeX, and you add figures that respond 
 sliders, drawings, filters, step-by-step animations. One build turns the same sources into a
 themed website, a PDF and stand-alone figure pages that any other site can embed.
 
-Draw a digit in the figure below. The network classifies it as you draw, and every layer
-updates with your stroke.
+Draw a digit in the figure below. A recognizer scores it against each digit's shape as you
+draw, and the network diagram lights up with your stroke.
 
 <HtmlEmbed
   id="docs-showcase"
   src="d3-neural-network.html"
   frameless
   title="A figure readers can operate"
-  desc="Draw a digit on the left; activations flow through the layers and the class probabilities update. Upstream demonstration by Thibaud Frere, research-article-template (CC BY 4.0)."
+  desc="Draw a digit on the left. Scores come from a heuristic shape-similarity recognizer, not a trained network, and the network diagram is illustrative. Upstream demonstration by Thibaud Frere, research-article-template (CC BY 4.0)."
 />
 
 The articles are built by Thibaud Frere's
@@ -168,8 +168,9 @@ Either way, the preview shows your title, the equations and a live function plot
 Three rules explain almost everything the engine does:
 
 1. **What you import is what you publish.** `article.mdx` imports the chapters, in reading
-   order. A chapter it imports is published, and a chapter it does not import is not. There is
-   no draft flag.
+   order. A chapter it imports is published, and a chapter it does not import is not part of
+   the article. There is no draft flag, and one exception: the `/dataviz/` gallery lists the
+   figures and images of every MDX file under `app/src/content`.
 2. **Each figure has one source.** A figure is one HTML file. The article, the figure's own page
    and any site that embeds it all render that file, so one fix reaches every reader.
 3. **Readers get the build, not your preview.** Readers receive the static site the build

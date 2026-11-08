@@ -1,18 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
-import { dirname, resolve } from "node:path";
+import { serveLocalD3 } from "./support";
 
-const require = createRequire(import.meta.url);
-const d3File = resolve(dirname(require.resolve("d3")), "../dist/d3.min.js");
-
-// Serve the installed upstream D3 dependency at its CDN URL so tests do not rely
-// on a third-party network. Production continues to use the native CDN loader.
-test.beforeEach(async ({ page }) => {
-  await page.route("https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js", async (route) => {
-    await route.fulfill({ contentType: "application/javascript", body: await readFile(d3File) });
-  });
-});
+serveLocalD3();
 
 test("complete upstream demo renders its chapters and local assets", async ({
   page,

@@ -257,9 +257,16 @@ function readGif(gif) {
 const servers = Object.values(SITES).map(({ script }) =>
   spawn("npm", ["run", script], { stdio: "ignore", detached: true }),
 );
+// A server that exits at once usually found its port taken. Another site answering on that
+// port would then be recorded instead, so stop rather than wait for it.
+let exited = null;
+for (const [i, server] of servers.entries()) {
+  server.once("exit", () => (exited ??= Object.values(SITES)[i].origin));
+}
 try {
   for (const { origin } of Object.values(SITES)) {
     for (let attempt = 0; ; attempt += 1) {
+      if (exited) throw new Error(`The server for ${exited} stopped; is its port already in use?`);
       if (
         await fetch(origin).then(
           (response) => response.ok,
@@ -286,5 +293,11 @@ try {
   }
   await browser.close();
 } finally {
-  for (const server of servers) process.kill(-server.pid);
+  for (const server of servers) {
+    try {
+      process.kill(-server.pid);
+    } catch {
+      // Already stopped.
+    }
+  }
 }

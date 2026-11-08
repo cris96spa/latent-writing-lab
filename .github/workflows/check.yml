@@ -26,10 +26,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [22, 24]
+        node-version: [22, 24, 26]
     steps:
       - name: Check out repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Validate workspace
         uses: ./.github/actions/validation
         with:
@@ -56,6 +58,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       # The removal refuses to run over uncommitted changes, and a fresh checkout has none.
       - name: Validate the starter project
         uses: ./.github/actions/validation
@@ -65,10 +69,15 @@ jobs:
 
   pages-build:
     name: Build the site for GitHub Pages
-    needs: check
+    needs: [check, demo-remove]
     # Only a validated push or manual run on the default branch publishes. A project created
     # from the template publishes its article; the starter itself publishes its documentation.
-    if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    # demo-remove runs only in the starter, so a skipped run counts as passing.
+    if: >-
+      always() && needs.check.result == 'success' &&
+      contains(fromJSON('["success", "skipped"]'), needs.demo-remove.result) &&
+      github.event_name != 'pull_request' &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -96,6 +105,8 @@ jobs:
       - name: Check out repository
         if: steps.source.outputs.enabled == 'true'
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Set up Node.js
         if: steps.source.outputs.enabled == 'true'
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -113,7 +124,10 @@ jobs:
       # A project site is served under /<repository>/, so the site is built for that base path.
       - name: Build the ${{ env.SITE }}
         if: steps.source.outputs.enabled == 'true'
-        run: npm run pages:build -- "$SITE" "${{ steps.pages.outputs.base_path }}/"
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          ORIGIN: ${{ steps.pages.outputs.origin }}
+        run: npm run pages:build -- "$SITE" "$BASE_PATH/" "$ORIGIN"
       - name: Upload the ${{ env.SITE }}
         if: steps.source.outputs.enabled == 'true'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
