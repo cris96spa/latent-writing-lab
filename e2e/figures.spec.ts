@@ -1,24 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
-import { dirname, resolve } from "node:path";
+import { collectErrors, serveLocalD3 } from "./support";
 
-const require = createRequire(import.meta.url);
-const d3File = resolve(dirname(require.resolve("d3")), "../dist/d3.min.js");
-
-// Serve the installed upstream D3 dependency at its CDN URL so tests do not rely
-// on a third-party network. Production continues to use the native CDN loader.
-test.beforeEach(async ({ page }) => {
-  await page.route("https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js", async (route) => {
-    await route.fulfill({ contentType: "application/javascript", body: await readFile(d3File) });
-  });
-});
+serveLocalD3();
 
 test("routing conserves weight and preserves ranking across temperature changes", async ({
   page,
 }) => {
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
+  const errors = collectErrors(page);
   await page.goto("/figures/routing/");
   await expect(page.getByRole("button", { name: "Reset figure" })).toBeVisible();
   for (const k of [1, 2, 3, 4]) {
@@ -43,9 +31,13 @@ test("routing conserves weight and preserves ranking across temperature changes"
   }
   await page.getByRole("button", { name: "Reset figure" }).click();
   await expect(page.locator(".routing-value").first()).toHaveText("59.9%");
-  await page.getByRole("button", { name: "Previous", exact: true }).click();
-  await page.getByRole("button", { name: "Previous", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Previous", exact: true })).toBeDisabled();
+  const previous = page.getByRole("button", { name: "Previous", exact: true });
+  await previous.focus();
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+  await expect(previous).toBeDisabled();
+  // Focus moves to Next instead of falling back to the page.
+  await expect(page.getByRole("button", { name: "Next", exact: true })).toBeFocused();
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(page.locator(".routing-steps")).toContainText("Keep the top-k");
   expect(errors).toEqual([]);

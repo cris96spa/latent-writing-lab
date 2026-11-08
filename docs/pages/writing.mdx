@@ -49,7 +49,10 @@ bibliography, one figure numbering and one table of contents. Start a chapter's 
 <Note title="Everything you import is published" variant="danger">
   The engine has no draft flag. A half-written chapter that
   `article.mdx` imports is built and deployed with the rest, so keep
-  it out of the imports until it is ready.
+  it out of the imports until it is ready. Even an unimported
+  chapter is not private: the `/dataviz/` gallery lists the figures
+  and images of every MDX file under `app/src/content`, so keep a
+  draft you must not publish outside that folder.
 </Note>
 
 MDX can run code: an import or an expression in a chapter executes when the site builds. Review

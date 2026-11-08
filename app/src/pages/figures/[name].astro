@@ -12,6 +12,7 @@ export function getStaticPaths() {
 }
 
 const { figure } = Astro.props;
+const frameless = "frameless" in figure && figure.frameless === true;
 ---
 
 <!doctype html>
@@ -21,6 +22,15 @@ const { figure } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{figure.title}</title>
     <meta name="description" content={figure.description} />
+    <script is:inline>
+      // Apply the saved or system theme before the first paint, as the article page does, so
+      // a dark-mode reader never sees the light theme flash.
+      try {
+        const saved = localStorage.getItem("theme");
+        const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+      } catch {}
+    </script>
     <script type="module" src="/scripts/color-palettes.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   </head>
@@ -29,9 +39,9 @@ const { figure } = Astro.props;
     <main>
       <HtmlEmbed
         src={figure.src}
-        title={"frameless" in figure && figure.frameless ? undefined : figure.title}
-        desc={"frameless" in figure && figure.frameless ? undefined : figure.description}
-        frameless={"frameless" in figure && figure.frameless}
+        title={frameless ? undefined : figure.title}
+        desc={frameless ? undefined : figure.description}
+        frameless={frameless}
       />
     </main>
   </body>

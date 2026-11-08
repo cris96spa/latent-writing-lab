@@ -1,27 +1,17 @@
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
-import { dirname, resolve } from "node:path";
-
-const require = createRequire(import.meta.url);
-const d3File = resolve(dirname(require.resolve("d3")), "../dist/d3.min.js");
+import { collectErrors, serveLocalD3 } from "./support";
 const pages: { file: string; label: string }[] = JSON.parse(
   readFileSync(new URL("../docs/pages/pages.json", import.meta.url), "utf8"),
 );
 test.use({ baseURL: "http://127.0.0.1:8033" });
 
-test.beforeEach(async ({ page }) => {
-  await page.route("https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js", async (route) => {
-    await route.fulfill({ contentType: "application/javascript", body: await readFile(d3File) });
-  });
-});
+serveLocalD3();
 
 test("every documentation page renders and the navigation reaches all of them", async ({
   page,
 }) => {
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
+  const errors = collectErrors(page);
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Latent Writing Lab");
   for (const [i, { label }] of pages.entries()) {
@@ -39,7 +29,9 @@ test("every documentation page renders and the navigation reaches all of them", 
     // Scroll through the page so every lazily mounted figure starts.
     const height = await page.evaluate(() => document.body.scrollHeight);
     for (let y = 0; y < height; y += 800) await page.evaluate((top) => scrollTo(0, top), y);
+    await page.waitForLoadState("networkidle");
     await expect(page.locator(".html-embed__error")).toHaveCount(0);
+    expect(errors, `figure errors on ${label}`).toEqual([]);
   }
   expect(errors).toEqual([]);
 });
@@ -60,8 +52,7 @@ test("the overview shows a live figure and the quick start", async ({ page }, te
 });
 
 test("the rules figure highlights where each rule applies", async ({ page }, testInfo) => {
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
+  const errors = collectErrors(page);
   await page.goto("/", { waitUntil: "domcontentloaded" });
   const figure = page.locator("figure#docs-rules");
   await figure.scrollIntoViewIfNeeded();
@@ -90,12 +81,13 @@ test("the rules figure highlights where each rule applies", async ({ page }, tes
 test("writing examples render math and citations", async ({ page }) => {
   await page.goto("/writing/", { waitUntil: "domcontentloaded" });
   await expect(page.locator(".katex").first()).toBeVisible();
-  await expect(page.locator("body")).toContainText("Attention Is All You Need");
+  // The page also shows a BibTeX example with this title, so look only at the rendered list.
+  await expect(page.locator(".references-block")).toContainText("Attention Is All You Need");
+  await expect(page.locator(".references-block")).toContainText("Adam");
 });
 
 test("interactive figures respond, load data and embed in a frame", async ({ page }) => {
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
+  const errors = collectErrors(page);
   await page.goto("/interactive-figures/", { waitUntil: "domcontentloaded" });
   const plotter = page.locator("figure#docs-plotter");
   const curve = plotter.locator("path.function-curve");
@@ -143,7 +135,11 @@ test("documentation reuses standalone figures and exports its own text", async (
   await expect(page).toHaveURL(/:8033\/figures\/function-plotter\//);
   await expect(page.getByRole("textbox")).toBeVisible();
   const text = await request.get("/llms.txt");
-  expect(await text.text()).toContain("Latent Writing Lab");
+  const llms = await text.text();
+  expect(llms).toContain("Latent Writing Lab");
+  // Headings from later pages prove the export covers the whole site, not only the overview.
+  expect(llms).toContain("## Readers get the build");
+  expect(llms).toContain("## Remove the demo");
   const gallery = await request.get("/dataviz/");
   expect(gallery.ok()).toBe(true);
   expect(await gallery.text()).toContain("d3-neural-network");

@@ -1,11 +1,10 @@
 {
-  "description": "Upstream's demonstration article, removed by `make demo-remove`. Figures, images and data the documentation pages use are not listed, so the documentation keeps working.",
+  "description": "Upstream's demonstration article, removed by `make demo-remove`. Files and references the documentation pages use are not listed, so the documentation keeps working.",
   "remove": [
     "app/src/content/assets/audio/",
     "app/src/content/assets/data/admin_seq_write.json",
     "app/src/content/assets/data/attention_evals.csv",
     "app/src/content/assets/data/banner_visualisation_data.csv",
-    "app/src/content/assets/data/continuous-glider.png",
     "app/src/content/assets/data/data.json",
     "app/src/content/assets/data/font-sprite-mapping.json",
     "app/src/content/assets/data/font-sprite.svg",
@@ -46,5 +45,19 @@
     "app/src/content/embeds/smol-playbook/train-model-decision-flowchart.html",
     "app/src/content/embeds/typography/",
     "e2e/article.spec.ts"
+  ],
+  "references": [
+    "mckinney2017python",
+    "he2016resnet",
+    "silver2017mastering",
+    "openai2023gpt4",
+    "doe2020thesis",
+    "cover2006entropy",
+    "zenodo2021dataset",
+    "sklearn2024",
+    "smith2024privacy",
+    "raffel2020t5",
+    "hf-moe",
+    "research-template"
   ]
 }

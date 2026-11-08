@@ -53,12 +53,13 @@ Verified 98 upstream files and 3 standalone figures. Astro validates and compile
 The browser tests live in `e2e/`: `article.spec.ts` covers the article, `figures.spec.ts` the
 standalone figure pages, and `docs.spec.ts` this documentation. They switch themes, shrink the
 page to phone width, operate controls and read the results, and they serve D3 locally, so the
-network never decides a result. `make demo-remove` replaces the demonstration's test with one
+network never decides a result. They start their own servers on ports 8080 and 8033 and stop
+with an error when a port is taken; set `REUSE_SERVERS=1` to test servers you already run. `make demo-remove` replaces the demonstration's test with one
 for the starter article; as your article grows, extend it with tests of what its figures must
 do, as shown in [Test what the figure claims](/interactive-figures/#test-what-the-figure-claims).
 
 No check can tell whether a sentence is true or a figure makes its point. That review happens in
-a pull request, where CI repeats every check on Node 22 and 24 and keeps the builds and test
+a pull request, where CI repeats every check on Node 22, 24 and 26 and keeps the builds and test
 reports as downloadable artifacts for 14 days.
 
 ## Export a PDF, LaTeX or images
@@ -114,19 +115,21 @@ so a pull request is where you review, and merging is when you publish.
 GitHub Pages serves a repository's site under `/REPOSITORY/`, while the engine assumes the site
 root. CI therefore builds with Astro's `--base` option, then prefixes the addresses the engine
 and its figures use: links, scripts, and paths to `/data/` and `/scripts/`, including the ones
-figure scripts fetch while they run. To reproduce the build locally:
+figure scripts fetch while they run. It also points the canonical, social and structured-data
+addresses at the public origin. Code examples on the page are left as written. To reproduce the
+build locally:
 
 ```sh
-npm run pages:build -- article /latent-writing-lab/
+npm run pages:build -- article /latent-writing-lab/ https://cris96spa.github.io
 ```
 
 ```text
-Prefixed 56 root-relative addresses in 5 pages with /latent-writing-lab/.
+Prefixed 62 root-relative addresses in 5 pages with /latent-writing-lab/.
 ```
 
 Any other root-relative address a figure builds at run time is not prefixed, so load files from
 `/data/`. The build does not set Astro's `site`, because the installed sitemap integration fails
-under Astro 4 when it is set, so a Pages site has no sitemap or canonical addresses.
+under Astro 4 when it is set, so a Pages site has no sitemap.
 
 </Accordion>
 
@@ -173,8 +176,9 @@ PDF during its build.
 
 </Accordion>
 
-For canonical addresses and a sitemap on your own domain, set the site's origin in the Astro
-configuration. After deploying, open the public page as a reader would: on a phone, in both
+On your own domain, build with `npm run pages:build -- article / https://your-domain.example`
+instead of `npm run build`, so the canonical and social addresses name your domain rather than
+the build's `localhost`. After deploying, open the public page as a reader would: on a phone, in both
 themes, with its downloads.
 
 ## When something looks wrong

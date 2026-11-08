@@ -81,7 +81,7 @@ Any figure can get its own page, ready to drop into another site with an iframe.
 <td width="33%" valign="top">
 
 **📄 Website and PDF**<br/>
-One build gives a static site in light and dark, a PDF and LaTeX, with figures captured for print.
+A static site in light and dark, plus PDF and LaTeX exports, with figures captured for print.
 
 </td>
 <td width="33%" valign="top">
@@ -142,6 +142,8 @@ Three rules keep it predictable:
 4. In **Settings → Pages**, set **Source** to **GitHub Actions**. From then on, every merge that
    passes the checks is live at `https://OWNER.github.io/REPOSITORY/`. Any static host, a
    Hugging Face Space or the included Docker image work too.
+5. Run `make update-template` now and then. It brings the template's later fixes into your
+   project on a branch for review, and never touches your article.
 
 <details>
 <summary><b>Where things live</b></summary>

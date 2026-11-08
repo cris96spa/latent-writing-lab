@@ -2,8 +2,8 @@ import { spawn } from "node:child_process";
 import { watch } from "node:fs";
 import { access, cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join, relative, resolve, sep } from "node:path";
-import { fileURLToPath } from "node:url";
-import { normalizeBase, rebase } from "./rebase.mjs";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { gzipSync } from "node:zlib";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const app = join(root, "app");
@@ -15,11 +15,22 @@ if (!["dev", "build", "preview"].includes(command)) {
 
 // The native engine reads content through both module imports and filesystem paths.
 // An ignored working copy preserves those assumptions without swapping the author's files.
-const stage = join(
-  root,
-  ".cache",
-  `docs-${command}${command === "build" ? "" : `-${process.pid}`}`,
-);
+// Servers get one copy per process, so two can run at once; each removes its own on exit,
+// and copies left by a process that no longer runs are removed here.
+const cache = join(root, ".cache");
+const stage = join(cache, `docs-${command}${command === "build" ? "" : `-${process.pid}`}`);
+for (const name of await readdir(cache).catch(() => [])) {
+  const pid = Number(name.match(/^(?:docs|guide)-(?:dev|preview)-(\d+)$/)?.[1]);
+  if (pid && !isRunning(pid)) await rm(join(cache, name), { recursive: true, force: true });
+}
+function isRunning(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error.code === "EPERM";
+  }
+}
 const content = join(stage, "src/content");
 const output = join(root, "docs-dist");
 if (command === "preview") {
@@ -87,7 +98,7 @@ async function writePage(file) {
   const page = pages.find((entry) => entry.file === file);
   if (!page) return;
   const source = await readFile(join(pagesDir, file), "utf8");
-  const frontmatter = source.match(/^---\n[\s\S]*?\n---\n/)?.[0] ?? "";
+  const frontmatter = source.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/)?.[0] ?? "";
   const nav = 'import DocsNav from "../../components/docs/DocsNav.astro";\n\n<DocsNav />\n';
   const body = `${frontmatter}\n${nav}${source.slice(frontmatter.length)}\n\n<DocsNav position="bottom" />\n`;
   await writeFile(join(content, "chapters", file), body);
@@ -153,11 +164,6 @@ if (command === "dev") {
   }
 }
 
-const baseArg = args.findIndex((arg) => arg === "--base" || arg.startsWith("--base="));
-const baseValue =
-  baseArg < 0 ? "/" : args[baseArg].includes("=") ? args[baseArg].split("=")[1] : args[baseArg + 1];
-const base = normalizeBase(baseValue);
-
 const astro = resolve(root, "node_modules/astro/astro.js");
 const flags = command === "dev" ? [] : ["--outDir", output];
 if (command !== "build") {
@@ -181,5 +187,31 @@ child.on("error", (error) => {
 child.on("exit", async (code, signal) => {
   for (const watcher of watchers) watcher.close();
   process.exitCode = code ?? (signal === "SIGINT" || signal === "SIGTERM" ? 0 : 1);
-  if (command === "build" && code === 0 && base !== "/") await rebase(output, base);
+  if (command === "build" && code === 0) await exportAllPagesAsText();
+  if (command !== "build") await rm(stage, { recursive: true, force: true });
 });
+
+// The engine's llms.txt export follows the chapters the entry file renders, and the site's
+// entry renders only the overview. After the build, run the same upstream export once more on
+// an entry that renders every page, so the text export covers the whole documentation.
+async function exportAllPagesAsText() {
+  const overview = await readFile(join(pagesDir, "index.mdx"), "utf8");
+  const frontmatter = overview.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/)?.[0] ?? "";
+  const imports = pages.map((page, i) => `import Page${i} from "./chapters/${page.file}";`);
+  const tags = pages.map((_, i) => `<Page${i} />`);
+  await writeFile(
+    join(content, "article.mdx"),
+    `${frontmatter}\n${imports.join("\n")}\n\n${tags.join("\n\n")}\n`,
+  );
+  const plugin = pathToFileURL(join(stage, "plugins/astro/generate-llms-txt.mjs"));
+  const { hooks } = (await import(plugin)).default();
+  const cwd = process.cwd();
+  process.chdir(stage);
+  try {
+    await hooks["astro:build:done"]({ dir: pathToFileURL(`${output}/`) });
+  } finally {
+    process.chdir(cwd);
+  }
+  const text = await readFile(join(output, "llms.txt"));
+  await writeFile(join(output, "llms.txt.gz"), gzipSync(text));
+}
