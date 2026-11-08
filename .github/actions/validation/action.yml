@@ -30,6 +30,9 @@ runs:
     - name: Check documentation links
       run: npm run docs:check
       shell: bash
+    - name: Test the template update command
+      run: npm run test:tools
+      shell: bash
     - name: Build the interactive guide
       run: npm run docs:build
       shell: bash

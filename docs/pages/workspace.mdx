@@ -25,10 +25,9 @@ article:
 | A figure several sites show         | One owning project and its figure page |
 | An improvement to the tooling or CI | A change to the starter itself         |
 
-A project created from the template is a snapshot, so later starter improvements do not reach
-it on their own. Note the starter commit a project began from, and bring later fixes across as
-reviewed patches. Never copy the starter's `app/src/content` over a project's: it replaces the
-article with the demonstration.
+A project created from the template starts as a snapshot, and `make update-template` brings in
+the template's later improvements, as described in
+[Keep a project up to date](#keep-a-project-up-to-date).
 
 ## Remove the demo
 
@@ -60,6 +59,54 @@ names, so references you added stay. Undo it before committing, staged or not, w
 git restore --source=HEAD --staged --worktree -- app/src/content e2e
 git clean -fd -- app/src/content e2e
 ```
+
+## Keep a project up to date
+
+The template keeps improving: its CI, tools, checks and documentation get fixes that a project
+created from it should have too. A project made with **Use this template** shares no history
+with the template, though, so Git cannot tell which of those changes the project already has.
+`make update-template` supplies the missing link. It temporarily grafts the project's first
+commit onto the template commit it was created from, so the template's newer commits become an
+ordinary merge. It merges them into an `update-template` branch, records the template commit it
+reached, and pushes the branch for you to review in a pull request:
+
+```sh
+make update-template
+```
+
+```text
+Estimated the template commit the project started from: 5fe8d1e…
+Pushed 'update-template'. Open a pull request into 'main', and review it like any change.
+```
+
+Run it from the project's default branch, pushed and with a clean working tree. The record lives
+in `package.json`, so the next update starts where this one stopped:
+
+```json
+"template": {
+  "repository": "https://github.com/cris96spa/latent-writing-lab.git",
+  "branch": "development",
+  "commit": "<the template commit the project last synced to>"
+}
+```
+
+On the first run, before that record exists, the command estimates the starting commit from the
+date of the project's first commit. Pass options through `ARGS`, as in
+`make update-template ARGS="--commit 1a2b3c4"`:
+
+| Option                 | Sets                                         | Default                                     |
+| ---------------------- | -------------------------------------------- | ------------------------------------------- |
+| `-u`, `--template-url` | The template repository                      | The recorded one, else this template        |
+| `-b`, `--branch`       | The template branch to update from           | The recorded one, else the template default |
+| `-c`, `--commit`       | The template commit the project last matched | The recorded one, else the estimate         |
+
+Your article belongs to you, so the update never changes `app/src/content`, `e2e/article.spec.ts`
+or `README.md`, even where the template changed them; it keeps them exactly as your last commit
+has them. When the template and your project changed the same lines elsewhere, the command
+stops and lists the files. Resolve them, stage and commit the result on `update-template`, and
+run the command again to finish. The graft and the temporary `template` remote are removed even
+when the command stops, so neither is ever pushed. When the project already has every change,
+the command says so and leaves no branch behind.
 
 ## What lives where
 
@@ -145,6 +192,8 @@ Run every command from the repository root.
 | `npm run export:pdf`   | PDF of the built article                                  |                |
 | `npm run readme:media` | Records the README animations                             |                |
 | `make demo-remove`     | Replaces the demonstration with a one-chapter starter     |                |
+| `make update-template` | Brings in the template's later changes on a branch        |                |
+| `npm run test:tools`   | Tests `make update-template` on throwaway repositories    |                |
 
 Without Make, run `npm run docs:dev` for `make doc`, `npm run docs:build` for `make doc-build`,
 and both `npm run docs:check` and `npm run docs:build` for `make doc-check`.
