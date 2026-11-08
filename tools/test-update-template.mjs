@@ -4,10 +4,13 @@ import {
   appendFileSync,
   cpSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readlinkSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -65,7 +68,10 @@ try {
   for (const target of [template, project]) {
     for (const file of files.filter((name) => existsSync(join(root, name)))) {
       mkdirSync(join(target, dirname(file)), { recursive: true });
-      cpSync(join(root, file), join(target, file));
+      // Tracked symbolic links, such as app/public/data, stay links, as in a real clone.
+      if (lstatSync(join(root, file)).isSymbolicLink()) {
+        symlinkSync(readlinkSync(join(root, file)), join(target, file));
+      } else cpSync(join(root, file), join(target, file));
     }
     const manifest = JSON.parse(readFileSync(join(target, "package.json"), "utf8"));
     delete manifest.template;
