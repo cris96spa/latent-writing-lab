@@ -35,6 +35,8 @@ Use the upstream skills and read their referenced guidance:
   captions, citations and the bibliography.
 - `.ai/skills/write-documentation/SKILL.md` for any other prose meant for other readers: the
   README, the documentation pages, pull requests and commit messages.
+- `.ai/skills/review-code/SKILL.md` for reviewing changes or the codebase, and for triaging
+  automated review comments.
 
 ## Figures and content
 
